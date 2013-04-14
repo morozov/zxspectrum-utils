@@ -1,0 +1,14 @@
+PREFIX = /usr/local
+RM = rm
+RM_OPTS = -f
+TARGETS = mb2tap mbdir mbload d802tap tap2d80 tap2mbd tap2mbhdd bin2tap bin2mbd dirhob dirtap dir0 hobto0 lstbas tapto0 tsttap 0tobin 0tohob 0totap
+
+install:
+	strip ${TARGETS}
+	install -c ${TARGETS} ${PREFIX}/bin
+
+uninstall:
+	cd ${PREFIX}/bin ; ${RM} ${RM_OPTS} ${TARGETS}
+
+clean:
+	${RM} ${RM_OPTS} ${TARGETS}
