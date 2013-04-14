@@ -169,7 +169,7 @@ void list(byte *bufzac, unsigned len, char *nazov)
           else
             {
             if (cc<128) {putchar(cc);ss=1;}
-            else if (cc<165) {putchar('þ');ss=1;}
+            else if (cc<165) {putchar('\xFE');ss=1;}
             else
               {
               tt=tok[cc-165];
