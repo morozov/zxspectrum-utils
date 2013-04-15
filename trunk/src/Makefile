@@ -44,7 +44,7 @@ hobto0: endian-compat.h hobto0.c
 	${CXX} ${CXXFLAGS} -o ../bin/hobto0 hobto0.c
 
 lstbas: endian-compat.h lstbas.c
-	${CXX} ${CXXFLAGS} -lm -o ../bin/lstbas lstbas.c
+	${CXX} lstbas.c ${CXXFLAGS} -lm -o ../bin/lstbas
 
 tapto0: endian-compat.h tapto0.c
 	${CXX} ${CXXFLAGS} -o ../bin/tapto0 tapto0.c
