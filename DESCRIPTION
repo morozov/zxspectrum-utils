@@ -10,7 +10,7 @@
    Analysers
    ---------
      lstbas ..... ZX Basic LIST command
-     dir0c ............... 000 analyser
+     dir0 ................ 000 analyser
      dirtap .............. TAP analyser
      dirhob ........... Hobeta analyser
      tsttap ......... TAP parity tester
@@ -32,6 +32,10 @@
      tap2d80 ..... convertor TAP=>D80
      tap2mbd ..... convertor TAP=>MBD
      tap2mbhdd . convertor TAP=>MBHDD
+
+  Utils
+  -----
+     breplace ........ binary replace
 
    All utilities are self-explanatory, it means if you run a program
    without any parameter then short help page will be displayed.

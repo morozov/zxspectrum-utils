@@ -1,8 +1,11 @@
 PREFIX=/usr/local
 CXX=gcc
-CXXFLAGS=-Wall -O3 -pedantic
+CXXFLAGS=-Wall -Os -pedantic
 CPP=g++
-CPPFLAGS=-Wall -O3 -pedantic
+CPPFLAGS=-Wall -Os -pedantic
+
+breplace: breplace.c
+	${CXX} ${CXXFLAGS} -o ../bin/breplace breplace.c
 
 mb2tap: endian-compat.h mb2tap.c
 	${CXX} ${CXXFLAGS} -o ../bin/mb2tap mb2tap.c
