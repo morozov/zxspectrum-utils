@@ -68,7 +68,8 @@ PRGNAME" ver."PRGVER", build ("__DATE__","__TIME__").\n"
 "   it under the terms of the GNU General Public License as published by\n"
 "   the Free Software Foundation; either version 2, or (at your option)\n"
 "   any later version.\n"
-"\n"
+"\n");
+	printf(
 "   This program is distributed in the hope that it will be useful,\n"
 "   but WITHOUT ANY WARRANTY; without even the implied warranty of\n"
 "   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n"
