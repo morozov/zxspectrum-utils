@@ -553,7 +553,7 @@ int main(int argc, char* argv[])
 
 	image_dirs = (void*)(disk_image + image_boot->dirs[0] * 1024
 		+ ndir * 4);
-	if (image_dirs->ident != '\x80')	/* create new directory */
+	if (image_dirs->ident != 0x80)	/* create new directory */
 	{
 		image_dirs->ident = 0x80;
 		i = get_free_sec(disk_image + image_boot->sec_fat1[0] * 1024,
@@ -594,10 +594,10 @@ int main(int argc, char* argv[])
 		image_dir = (void*)(disk_image + dirsec * 1024);
 		for (i = 0; i < 1024 / 32; i++)
 		{
-			if ((image_dir->ident != '\x80') &&
-				(image_dir->ident != '\x90') &&
-				(image_dir->ident != '\xA0') &&
-				(image_dir->ident != '\xB0'))
+			if ((image_dir->ident != 0x80) &&
+				(image_dir->ident != 0x90) &&
+				(image_dir->ident != 0xA0) &&
+				(image_dir->ident != 0xB0))
 			{
 				image_dir->ident = 0xB0;
 				image_dir->time[0] = image_dir->time[1] =
