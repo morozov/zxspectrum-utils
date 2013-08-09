@@ -71,7 +71,7 @@ int main(int argc, char *argv[])
   int fdx,a,argt,files;
   FILE *fd;
   int poz,siz;
-  unsigned len,b,c;
+  size_t len,b,c;
   char *mm,subor[100];
   struct stat filestat;
 
@@ -114,22 +114,22 @@ int main(int argc, char *argv[])
         {
         printf("%6d\t",poz);
         b = fread(buffer,1,3,fd);
-        if (b < 0) {cantread();break;}
+        if (b == 0) {cantread();break;}
         if (b < 2) {zle();printf("useless one byte\n");chyba=1;break;}
         len = FROM_SHORT(buffer);
         if (b < 3) {nemam(len);chyba=1;break;}
         if (len < 2) {printf("Error: Data integrity corrupted "
-                             "(lenght=%d)\n",len-2);chyba=1;break;}
+                             "(lenght=%d)\n",(int)(len-2));chyba=1;break;}
 
         if ((len!=19)||(buffer[2])!=0)
           {
-          printf("Body - %03u..%05u",buffer[2],len-2);
+          printf("Body - %03u..%05u",(unsigned)(buffer[2]),(unsigned)(len-2));
           parita = buffer[2]; len--;
           while(len)
             {
             c = len>lenbuf ? lenbuf : len;
             b = fread(body,1,c,fd);
-            if (b < 0) {cantread();chyba=1;break;}
+            if (b == 0) {cantread();chyba=1;break;}
             len -= b;
             if (b < c)
               {printf(" - ???\n%6d\t",(int)ftell(fd));nemam(len);chyba=1;break;}
@@ -141,7 +141,7 @@ int main(int argc, char *argv[])
           {
           printf("Head - ");
           b = fread(buffer+3,1,18,fd);
-          if (b < 0) {cantread();chyba=1;break;}
+          if (b == 0) {cantread();chyba=1;break;}
           if (b < 18) {nemam(18-b);chyba=1;break;}
           for(b=4;b<14;b++)
             if (buffer[b]<32) putchar('.');
