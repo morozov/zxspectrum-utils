@@ -242,13 +242,7 @@ int main (int argc, char *argv[]) {
 		return 1;
 	}
 	
-	if (program) {
-		basic=0;	/* disable creating basic loader for basic program */
-		address=32768;	/* 32768 means no autostart */
-		proglen=inputlen;
-	}
-		
-	if (basic) {
+	if ((!program) && (basic)) {
 		tap_index = 110+d80;
 		i = 0;
 		while ((*(foutname+i) != '.' && *(foutname+i) != '\0') && i<10) {
@@ -365,6 +359,12 @@ int main (int argc, char *argv[]) {
 	inputlen = fread (tap+tap_index+10, 1, 49152, finput);
 	if (!feof(finput))
 		printf("Warning: File exceed 49151 limit!\n");
+		
+	if (program) {
+		address=32768;	/* 32768 means no autostart */
+		proglen=inputlen;
+	}
+	
 	checksum ^= *(tap+tap_index++) = inputlen % 256;
 	checksum ^= *(tap+tap_index++) = inputlen / 256;
 	checksum ^= *(tap+tap_index++) = address % 256;
