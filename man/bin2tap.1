@@ -9,6 +9,7 @@ The \fBbin2tap\fP program is a member of zxspectrum-utils(1) suite of tools. Use
 .SH DESCRIPTION
 All options are optional except input file name. If some option is required and is not set, default value is used. Options are:
 
+  \-p                     make BASIC program instead of CODE block
   \-a address             start address of CODE block,
                          default value is 32768
   \-o output_file         assign output .tap file. If this switch
@@ -36,7 +37,7 @@ All options are optional except input file name. If some option is required and 
   \-h  | --help           print usage information
   \-v  | --version        print program version
 
-BASIC loader looks as follow:
+BASIC loader for CODE blocks looks as follow:
 
   10 REM loader by bin2tap1.3
   20 BORDER VAL "0": PAPER VAL "0": INK VAL "7"
