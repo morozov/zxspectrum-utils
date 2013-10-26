@@ -30,6 +30,7 @@ void usage (void) {
 	version();
 	printf("Usage: bin2tap [options] file.bin\n\nOptions:\n\
   -o output_file      output TAP file\n\
+  -p                  make 'Program' instead of 'Bytes'\n\
   -a address          start address of binary file [32768]\n\
   -b                  include BASIC loader\n\
   -c clear_address    CLEAR address in BASIC loader [24575]\n\
@@ -66,6 +67,7 @@ int main (int argc, char *argv[]) {
 	int	checksum;		/* checksum - TAP checksum */
 	int	i, in_name, no;		/* general purpose variables */
 
+	int	proglen = 32768;	/* program length, for code it is unused and contains 32768 */
 	int	address = ADDRESS;	/* address - start address of binary file */
 	int	basic = 0;		/* basic - indicator of BASIC loader */
 	int	clear = CLEAR;		/* clear - CLEAR value for BASIC loader */
@@ -74,6 +76,7 @@ int main (int argc, char *argv[]) {
 	int	d80 = 0;		/* d80 - indicate D80 loader */
 	int	append = 0;		/* append - append result at EOF */
 	int	hp = 0;			/* hp - add poke for header dissable */
+	int	program = 0;		/* create program */
 	unsigned char	run_name[] = "run       "; /* run_name - alternative name of basic loader */
 
 	unsigned char	loader_template[] = "\0\x0A\x16\0\xEAloader by bin2tap1.2\x0D\
@@ -113,6 +116,10 @@ int main (int argc, char *argv[]) {
 		}
 		if (!strcmp(argv[i], "-b")) {
 			basic = 1;
+			continue;
+		}
+		if (!strcmp(argv[i], "-p")) {
+			program = 1;
 			continue;
 		}
 		if (!strcmp(argv[i], "-c")) {
@@ -234,7 +241,13 @@ int main (int argc, char *argv[]) {
 		printf("Output file open failed!\n");
 		return 1;
 	}
-
+	
+	if (program) {
+		basic=0;	/* disable creating basic loader for basic program */
+		address=32768;	/* 32768 means no autostart */
+		proglen=inputlen;
+	}
+		
 	if (basic) {
 		tap_index = 110+d80;
 		i = 0;
@@ -336,7 +349,10 @@ int main (int argc, char *argv[]) {
 	*(tap+tap_index++) = 19;	/* bytes header len */
 	*(tap+tap_index++) = 0;
 	*(tap+tap_index++) = 0;		/* header */
-	checksum = *(tap+tap_index++) = 3;		/* bytes file */
+	if (program)
+		checksum = *(tap+tap_index++) = 0;		/* program file */
+	else
+		checksum = *(tap+tap_index++) = 3;		/* bytes file */
 	in_name = 1;
 	for (i = 0; i < 10; ++i) {	/* filename  */
 		if (in_name && (foutname[i] == '.' || foutname[i] == '\0'))
@@ -353,8 +369,8 @@ int main (int argc, char *argv[]) {
 	checksum ^= *(tap+tap_index++) = inputlen / 256;
 	checksum ^= *(tap+tap_index++) = address % 256;
 	checksum ^= *(tap+tap_index++) = address / 256;
-	checksum ^= *(tap+tap_index++) = 0;
-	checksum ^= *(tap+tap_index++) = 32768 / 256;
+	checksum ^= *(tap+tap_index++) = proglen % 256;
+	checksum ^= *(tap+tap_index++) = proglen / 256;
 	*(tap+tap_index++) = checksum;
 
 	*(tap+tap_index++) = (inputlen + 2) % 256;
