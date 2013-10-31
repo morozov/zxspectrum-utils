@@ -63,3 +63,6 @@ tsttap: endian-compat.h tsttap.c
 
 0totap: endian-compat.h 0totap.c
 	${CXX} ${CXXFLAGS} -o ../bin/0totap 0totap.c
+
+makesna: makesna.cpp
+	${CPP} ${CPPFLAGS} -o ../bin/makesna makesna.cpp
