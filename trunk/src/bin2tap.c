@@ -360,10 +360,7 @@ int main (int argc, char *argv[]) {
 	if (!feof(finput))
 		printf("Warning: File exceed 49151 limit!\n");
 		
-	if (program) {
-		address=32768;	/* 32768 means no autostart */
-		proglen=inputlen;
-	}
+	if (program) proglen=inputlen;
 	
 	checksum ^= *(tap+tap_index++) = inputlen % 256;
 	checksum ^= *(tap+tap_index++) = inputlen / 256;

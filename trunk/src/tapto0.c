@@ -31,9 +31,10 @@ void pomoc(int x, char *name)
 "Linux port and safe endian correction      (c) 2002 Tritol\n");
 
 if(x<2){printf(
-"\n  Usage: %s [-l] file1 [file2 ...]\n"
+"\n  Usage: %s [-l] [-f] file1 [file2 ...]\n"
 "    Converts input files in TAP format into 000 file format.\n"
 "    Option: -l ... creates long filenames\n"
+"            -f ... force overwrite existing files\n"
 "    You can use wildcards '*' and '?' in filename parameters.\n"
 "    Extension of output files will be three-digit number.\n\n", name);
 
@@ -82,15 +83,18 @@ void zxtopc(unsigned char *name, int longnames)
 }
 
 /********** Vytvori novy subor MENO.XYZ, xyz=000..999 *****/
-FILE* novysubor (char *meno)
+FILE* novysubor (char *meno, int overwrite)
 {
   int a;
   FILE *b;
   char *mm;
+  struct stat s;
+  
   mm=meno+strlen(meno);
   for (a=0,b=NULL;(a<1000)&&(b==NULL);a++)
     {
     sprintf(mm,".%03d",a);
+    if (!overwrite && !stat(meno,&s)) continue;
     b=fopen(meno,"wb");
     }
   return(b);
@@ -107,13 +111,20 @@ int main(int argc, char *argv[])
   int ls,taplen,poz;
   char *mm,subor[100];
   struct stat filestat;
-  int args,longnames;
+  int args,longnames,overwrite;
 
   pomoc(argc, argv[0]);
  
-  args=1;longnames=0;
-  if (!strcmp(argv[1],"-l")) {args=2;longnames=1;}
-
+  args=1;longnames=0;overwrite=0;
+  while (argv[args][0]=='-' && argv[args][1] && !argv[args][2]) {
+    switch (argv[args][1]) {
+      case 'l': longnames=1; break;
+      case 'f': overwrite=1; break;
+      default: printf("Warning! Unknown switch %c\n", argv[args][1]);
+    }
+    args++;
+  }
+  
   tapfiles=0;nulfiles=0;
   for (a=args;a<argc;a++)
     {
@@ -144,7 +155,7 @@ int main(int argc, char *argv[])
         {
         printf("headerless ... %5u ",len-2); len--;
         strcpy(meno,"headless");
-        fdo = novysubor(meno);
+        fdo = novysubor(meno, overwrite);
         if (fdo==NULL)
           {
           printf("Can't open %s\n",meno);
@@ -175,7 +186,7 @@ int main(int argc, char *argv[])
         if (ls > taplen) {uneof();chyba=1;break;}
         memcpy(meno,head+4,10);
         zxtopc((unsigned char *)meno,longnames);
-        fdo = novysubor(meno);
+        fdo = novysubor(meno, overwrite);
         if (fdo==NULL)
           {
           printf("Can't open %s\n",meno);
