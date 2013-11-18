@@ -66,3 +66,9 @@ tsttap: endian-compat.h tsttap.c
 
 makesna: makesna.cpp
 	${CPP} ${CPPFLAGS} -o ../bin/makesna makesna.cpp
+
+tzx2tap: endian-compat.h tzx2tap.c
+	${CXX} ${CXXFLAGS} -o ../bin/tzx2tap tzx2tap.c
+
+tap2tzx: endian-compat.h tap2tzx.c
+	${CXX} ${CXXFLAGS} -o ../bin/tap2tzx tap2tzx.c
