@@ -1,17 +1,17 @@
-///////////////////////////////////////////////////////////////////////////////
-// TZX to TAP converter
-//                                                                       v0.13b
-// (c) 1997 Tomaz Kac
-//
-// Watcom C 10.0+ specific code... Change file commands for other compilers
+/******************************************************************************
+** TZX to TAP converter
+**                                                                       v0.13b
+** (c) 1997 Tomaz Kac
+**
+** Watcom C 10.0+ specific code... Change file commands for other compilers
 
-//
-//Amiga version compiled by Andrew Barker - andrew.barker@sunderland.ac.uk
-//Compile: sc link uchar math=ieee TZX2TAP.c
-//
-//Linux little modification by Tritol - ditol@email.cz
-//Compile: gcc -Wall -o tzx2tap tzx2tap.c (or use suplied Makefile)
-//
+**
+**Amiga version compiled by Andrew Barker - andrew.barker@sunderland.ac.uk
+**Compile: sc link uchar math=ieee TZX2TAP.c
+**
+**Linux little modification by Tritol - ditol@email.cz
+**Compile: gcc -Wall -o tzx2tap tzx2tap.c (or use suplied Makefile)
+*/
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -22,12 +22,12 @@
 #include <fcntl.h>
 #include <errno.h>
 
-#define MAJREV 1         // Major revision of the format this program supports
-#define MINREV 3         // Minor revision -||-
+#define MAJREV 1        /* Major revision of the format this program supports */
+#define MINREV 3        /* Minor revision -||- */
 
 int fhi, fho, flen;
 unsigned char *mem;
-unsigned char buf[256];
+char buf[256];
 int pos;
 int len;
 int block;
@@ -39,8 +39,8 @@ int Get3 (unsigned char *mem) {return (mem[0] + (mem[1] * 256) + (mem[2] * 256 *
 int Get4 (unsigned char *mem) {return (mem[0] + (mem[1] * 256) + (mem[2] * 256 * 256) + (mem[3] * 256 * 256 * 256));}
 
 int  FileLength (int fh);
-void Error (unsigned char *errstr);
-void ChangeFileExtension (unsigned char *str, unsigned char *ext);
+void Error (char *errstr);
+void ChangeFileExtension (char *str, char *ext);
 
 
 int main (int argc, char *argv[])
@@ -77,7 +77,7 @@ int main (int argc, char *argv[])
 
   mem[7] = 0;
 
-  if (strcmp (mem, "ZXTape!")) 
+  if (strcmp ((char *)mem, "ZXTape!")) 
     { 
     free (mem);
     Error ("File is not in ZXTape format!");
@@ -193,8 +193,8 @@ int main (int argc, char *argv[])
   return (0);
 }
 
-// Changes the File Extension of String *str to *ext
-void ChangeFileExtension (unsigned char *str, unsigned char *ext)
+/* Changes the File Extension of String *str to *ext */
+void ChangeFileExtension (char *str, char *ext)
 {
   int n;
   
@@ -208,7 +208,7 @@ void ChangeFileExtension (unsigned char *str, unsigned char *ext)
   strcat (str, ext);
 }
 
-// Determine length of file
+/* Determine length of file */
 int FileLength (int fh)
 {
   int curpos, size;
@@ -219,8 +219,8 @@ int FileLength (int fh)
   return (size);
 }
 
-// exits with an error message *errstr
-void Error (unsigned char *errstr)
+/* exits with an error message *errstr */
+void Error (char *errstr)
 {
   printf ("\n-- Error: %s ('%s')\n", errstr, strerror (errno));
   exit (0);
