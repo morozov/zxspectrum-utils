@@ -18,20 +18,23 @@
 
   Convertors
   ----------
-     0totap ...... convertor 000=>TAP
-     tapto0 ...... convertor TAP=>000
-     0tobin ...... convertor 000=>BIN
-     binto0 ...... convertor BIN=>000
-     0tohob ... convertor 000=>HOBETA
-     hobto0 ... convertor HOBETA=>000
-     bin2mbd ..... convertor BIN=>MBD
-     bin2tap ..... convertor BIN=>TAP
-     d802tap ..... convertor D80=>TAP
-     mbload ... extract file from MBD
-     mb2tap ...... convertor MBD=>TAP
-     tap2d80 ..... convertor TAP=>D80
-     tap2mbd ..... convertor TAP=>MBD
-     tap2mbhdd . convertor TAP=>MBHDD
+     0totap ....... convertor 000=>TAP
+     tapto0 ....... convertor TAP=>000
+     0tobin ....... convertor 000=>BIN
+     binto0 ....... convertor BIN=>000
+     0tohob .... convertor 000=>HOBETA
+     hobto0 .... convertor HOBETA=>000
+     bin2mbd ...... convertor BIN=>MBD
+     bin2tap ...... convertor BIN=>TAP
+     d802tap ...... convertor D80=>TAP
+     makesna . convert binaries to SNA
+     mbload .... extract file from MBD
+     mb2tap ....... convertor MBD=>TAP
+     tap2d80 ...... convertor TAP=>D80
+     tap2mbd ...... convertor TAP=>MBD
+     tap2mbhdd .. convertor TAP=>MBHDD
+     tap2tzx ...... convertor TAP=>TZX
+     tzx2tap ...... convertor TZX=>TAP
 
   Utils
   -----
@@ -246,6 +249,46 @@
   Illegal characters for ms-dos are replaced by '~'.
   Note: There is no way how to detect if source is TAP format. This
   convertor uses little heuristic detection and it can fail sometimes.
+
+ MAKESNA
+ -------
+  Usage: makesna output.sna {PC} input1 {dest_adr} [input {dest_adr}]*
+    Converts binary files into SNA file. Start address of the SNA file will
+    be {PC} address and each input file will be stored at {dest_adr}. You can
+    use addresses up to 128kB, so you can easy create snapshot for 128k
+    Spectrum.
+  Example:
+    makesna 128game.sna 24200 program.bin 24200 page17.b 65536 page19.b 81920
+
+ TAP2TZX
+ -------
+  Usage: tap2tzx input.tap [output.tzx]
+   This utility will let you convert standard .TAP files to .TZX format. This
+   could be usefull if you want to replay .TAP files using the PLAYTZX utility
+   or convert them to .VOC format. A standard pause of 1 second will be put
+   after every converted block.
+   If output.tzx is not given then the INPUT filename will be used, but its
+   extension will be changed to .tzx.
+
+ TZX2TAP
+ -------
+  Usage: tzx2tap input.tzx [output.tap]
+   This utility will let you convert the new format .TZX files to standard
+   .TAP files, which are used by most emulators today. Since .TZX files have
+   more information about speed and other important features these features will
+   be lost during conversion. If the .TZX file only had normal loading blocks
+   then this ofcourse will not matter. All Normal Loading, Custom Loading and
+   Pure Data blocks will be converted into .TAP file... however the blocks which
+   are over 64k long will be skipped. Ofcourse all other information and control
+   blocks will be skipped too.
+   This might be usefull for those emulators that can use only .TAP files and
+   can figure out the speed themselves from the actual code (like Warajevo,
+   Radovan Garabik's emulator,...).
+
+   If OUTPUT.TAP is not given then the INPUT filename will be used, but its
+   extension will be changed to .TAP.
+   If any of the non-standard blocks are encountered then the --Warning will
+   be displayed, so you know what has been converted and what has been skipped.
 
 
  Graphic preview
