@@ -25,10 +25,11 @@
 #define MAJREV 1        /* Major revision of the format this program supports */
 #define MINREV 3        /* Minor revision -||- */
 
-int fhi, fho, flen;
+FILE *fhi, *fho;
+long flen;
 unsigned char *mem;
 char buf[256];
-int pos;
+long pos;
 int len;
 int block;
 int longer, custom, only, dataonly, direct, not_rec;
@@ -38,7 +39,7 @@ int Get2 (unsigned char *mem) {return (mem[0] + (mem[1] * 256));}
 int Get3 (unsigned char *mem) {return (mem[0] + (mem[1] * 256) + (mem[2] * 256 * 256));}
 int Get4 (unsigned char *mem) {return (mem[0] + (mem[1] * 256) + (mem[2] * 256 * 256) + (mem[3] * 256 * 256 * 256));}
 
-int  FileLength (int fh);
+long FileLength (FILE* fh);
 void Error (char *errstr);
 void ChangeFileExtension (char *str, char *ext);
 
@@ -61,10 +62,10 @@ int main (int argc, char *argv[])
   else      
     strcpy (buf, argv[2]);
 
-  if ((fhi = open (argv[1], O_RDONLY)) == -1) 
+  if ((fhi = fopen (argv[1], "rb")) == NULL) 
     Error ("Can't read file!");
 
-  if ((fho = creat (buf, 0644)) == -1) 
+  if ((fho = fopen (buf, "wb")) == NULL) 
     Error ("Can't create file!");
 
   flen = FileLength (fhi);
@@ -72,7 +73,7 @@ int main (int argc, char *argv[])
   if ((mem = (unsigned char *) malloc (flen)) == NULL) 
     Error ("Not enough memory to load input file!");
 
-  if (read (fhi, mem, 10) != 10)
+  if (fread (mem, 1, 10, fhi) != 10)
     Error ("Read error!");
 
   mem[7] = 0;
@@ -94,7 +95,7 @@ int main (int argc, char *argv[])
   if (mem[8] == MAJREV && mem[9] > MINREV) 
     printf ("\n-- Warning: Some of the data might not be properly recognised!\n");
 
-  if (read (fhi, mem, flen - 10) != (flen - 10))
+  if (fread (mem, 1, flen - 10, fhi) != (flen - 10))
     Error ("Read error!");
 
   pos = block = longer = custom = only = dataonly = direct = not_rec = 0;
@@ -105,9 +106,9 @@ int main (int argc, char *argv[])
     switch (mem[pos - 1])
       {
       case 0x10: len = Get2(&mem[pos + 0x02]);
-                 if (write (fho, &mem[pos + 0x02], 2) != 2)
+                 if (fwrite (&mem[pos + 0x02], 1, 2, fho) != 2)
                    Error ("Write error!");
-                 if (write (fho, &mem[pos + 0x04], len) != len)
+                 if (fwrite (&mem[pos + 0x04], 1, len, fho) != len)
                    Error ("Write error!");
                  pos += len + 0x04;
                  block++;
@@ -115,9 +116,9 @@ int main (int argc, char *argv[])
       case 0x11: len = Get3 (&mem[pos + 0x0F]);
                  if (len < 65536)
                    {
-                   if (write (fho, &mem[pos + 0x0F], 2) != 2)
+                   if (fwrite (&mem[pos + 0x0F], 1, 2, fho) != 2)
                      Error ("Write error!");
-                   if (write (fho, &mem[pos + 0x12], len) != len)
+                   if (fwrite (&mem[pos + 0x12], 1, len, fho) != len)
                      Error ("Write error!");
                    block++;
                    }
@@ -135,9 +136,9 @@ int main (int argc, char *argv[])
       case 0x14: len = Get3 (&mem[pos + 0x07]);
                  if (len < 65536)
                    {
-                   if (write (fho, &mem[pos + 0x07], 2) != 2)
+                   if (fwrite (&mem[pos + 0x07], 1, 2, fho) != 2)
                      Error ("Write error!");
-                   if (write (fho, &mem[pos + 0x0A], len) != len)
+                   if (fwrite (&mem[pos + 0x0A], 1, len, fho) != len)
                      Error ("Write error!");
                    block++;
                    }
@@ -187,8 +188,8 @@ int main (int argc, char *argv[])
     printf ("-- Warning: Some blocks were NOT recognised !\n");
 
   printf ("Succesfully converted %d blocks!\n", block);
-  close (fhi);
-  close (fho);
+  fclose (fhi);
+  fclose (fho);
   free (mem);
   return (0);
 }
@@ -209,13 +210,14 @@ void ChangeFileExtension (char *str, char *ext)
 }
 
 /* Determine length of file */
-int FileLength (int fh)
+long FileLength (FILE* fh)
 {
-  int curpos, size;
+  long curpos, size;
   
-  curpos = lseek (fh, 0, SEEK_CUR);
-  size = lseek (fh, 0, SEEK_END);
-  lseek (fh, curpos, SEEK_SET);
+  curpos = ftell (fh);
+  fseek (fh, 0, SEEK_END);
+  size = ftell (fh);
+  fseek (fh, curpos, SEEK_SET);
   return (size);
 }
 

@@ -83,7 +83,8 @@ int main(int argc, char **argv) {
   unsigned char buffer2[MAXEEPROMLEN];
   
   char *str_data, *str_addr;
-  int len, addr, dir, ok, fd, farg;
+  int len, addr, dir, ok, farg;
+  FILE *fd;
   
   /* defaults */
   str_data = (char *)DIVIDE_DATA;
@@ -117,21 +118,21 @@ int main(int argc, char **argv) {
     return 1;
   }
   
-  if ((fd = open(argv[farg], O_RDONLY)) < 0) {
+  if ((fd = fopen(argv[farg], "rb")) == NULL) {
     printf("%s: %s\n", argv[farg], strerror(errno));
     return 1;
   }
   
   /* address permutation string tells us how big memory we need */
-  if ((len = read(fd, buffer, (1 << strlen(str_addr)) )) != (1 << strlen(str_addr))) {
+  if ((len = fread(buffer, 1, (1 << strlen(str_addr)), fd )) != (1 << strlen(str_addr))) {
     printf("No enough data\n");
-    close(fd);
+    fclose(fd);
     return 1;
   }
   
-  close(fd);
+  fclose(fd);
   
-  if ((fd = creat(argv[farg+1], 0666)) < 0) {
+  if ((fd = fopen(argv[farg+1], "wb")) == NULL) {
     printf("%s: %s\n", argv[farg], strerror(errno));
     return 1;
   }
@@ -141,13 +142,13 @@ int main(int argc, char **argv) {
     buffer2[ scramble_value(str_addr, addr, dir) ] = scramble_value(str_data, buffer[addr], dir);
 
   /* write the same amount of data */
-  if ((len = write(fd, buffer2, (1 << strlen(str_addr)) )) != (1 << strlen(str_addr))) {
+  if ((len = fwrite(buffer2, 1, (1 << strlen(str_addr)), fd )) != (1 << strlen(str_addr))) {
     printf("No all data written\n");
-    close(fd);
+    fclose(fd);
     return 1;
   }
   
-  close(fd);
+  fclose(fd);
   return 0;
 }
 

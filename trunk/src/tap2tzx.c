@@ -22,15 +22,16 @@
 #include <sys/stat.h>
 #include <errno.h>
 
-int fhi, fho, flen;
+FILE *fhi, *fho;
+long flen;
 unsigned char *mem;
 char buf[256];
-int pos;
+long pos;
 int len;
 int block;
 unsigned char tzxbuf[10] = {'Z', 'X', 'T', 'a', 'p', 'e', '!', 0x1A, 1, 3};
 
-int  FileLength (int fh);
+long FileLength (FILE* fh);
 void Error (char *errstr);
 void ChangeFileExtension (char *str, char *ext);
 
@@ -53,10 +54,10 @@ int main (int argc, char *argv[])
   else
     strcpy (buf, argv[2]);
 
-  if ((fhi = open (argv[1], O_RDONLY)) == -1) 
+  if ((fhi = fopen (argv[1], "rb")) == NULL) 
     Error ("Can't read file!");
 
-  if ((fho = creat (buf, 0644)) == -1) 
+  if ((fho = fopen(buf, "wb")) == NULL) 
     Error ("Can't create file!");
 
   flen = FileLength (fhi);
@@ -64,10 +65,10 @@ int main (int argc, char *argv[])
   if ((mem = (unsigned char *) malloc (flen)) == NULL) 
     Error ("Not enough memory to load input file!");
 
-  if (read (fhi, mem, flen) != flen)
+  if (fread (mem, 1, flen, fhi) != flen)
     Error ("Read error!");
   
-  if (write (fho, tzxbuf, 10) != 10)
+  if (fwrite (tzxbuf, 1, 10, fho) != 10)
     Error ("Write error!");
   
   pos = block = 0;
@@ -85,17 +86,17 @@ int main (int argc, char *argv[])
       if (pos + len >= flen) buf[1] = buf[2] = 0; 
       buf[3] = len & 0xff;
       buf[4] = len >> 8;
-      if (write (fho, buf, 5) != 5)
+      if (fwrite (buf, 1, 5, fho) != 5)
         Error ("Write error!");
-      if (write (fho, &mem[pos], len) != len)
+      if (fwrite (&mem[pos], 1, len, fho) != len)
         Error ("Write error!");
       }
     pos += len;
     block++;
     }
   printf ("\nSuccesfully converted %d blocks!\n", block);
-  close (fhi);
-  close (fho);
+  fclose (fhi);
+  fclose (fho);
   free (mem);
   return (0);
 }
@@ -116,13 +117,14 @@ void ChangeFileExtension (char *str, char *ext)
 }
 
 /* Determine length of file */
-int FileLength (int fh)
+long FileLength (FILE* fh)
 {
-  int curpos, size;
+  long curpos, size;
   
-  curpos = lseek (fh, 0, SEEK_CUR);
-  size = lseek (fh, 0, SEEK_END);
-  lseek (fh, curpos, SEEK_SET);
+  curpos = ftell(fh);
+  fseek (fh, 0, SEEK_END);
+  size = ftell(fh);
+  fseek (fh, curpos, SEEK_SET);
   return (size);
 }
 
