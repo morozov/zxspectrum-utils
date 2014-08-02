@@ -34,6 +34,9 @@ bin2tap: bin2tap.c
 bin2mbd: bin2mbd.c
 	${CXX} ${CXXFLAGS} -o ../bin/bin2mbd bin2mbd.c
 
+binto0: binto0.c
+	${CXX} ${CXXFLAGS} -o ../bin/binto0 binto0.c
+
 dirtap: endian-compat.h dirtap.c
 	${CXX} ${CXXFLAGS} -o ../bin/dirtap dirtap.c
 
