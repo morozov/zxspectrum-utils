@@ -230,8 +230,8 @@ BYTE tap2d80 (void)
           }
           oldflag=header.blockinfo.flag;           // remember flag
 	  i=notusedsecfromFAT(0);   // get available sector from FAT
-          itemrec.length[0] = i % 256;
-	  itemrec.length[1] = i / 256;
+          itemrec.firstsec[0] = i % 256;
+	  itemrec.firstsec[1] = i / 256;
           itemrec.attributes=0x0F;
           memset(&itemrec.filledwithE5[0],0xE5,10);
 #ifdef DEBUG
