@@ -32,6 +32,7 @@ void usage (void) {
   -o output_file      output TAP file\n\
   -p                  make 'Program' instead of 'Bytes'\n\
   -a address          start address of binary file [32768]\n\
+  -x extra_address    extra address of binary file [32768]\n\
   -b                  include BASIC loader\n\
   -c clear_address    CLEAR address in BASIC loader [24575]\n\
   -r run_address      address where to start bin. file for BASIC loader [32768]\n");
@@ -67,8 +68,9 @@ int main (int argc, char *argv[]) {
 	int	checksum;		/* checksum - TAP checksum */
 	int	i, in_name, no;		/* general purpose variables */
 
-	int	proglen = 32768;	/* program length, for code it is unused and contains 32768 */
+	int	proglen;		/* program length, for code it contains "xaddress" */
 	int	address = ADDRESS;	/* address - start address of binary file */
+	int	xaddress = 32768;	/* extra address - extra address of binary file, default 32768 */
 	int	basic = 0;		/* basic - indicator of BASIC loader */
 	int	clear = CLEAR;		/* clear - CLEAR value for BASIC loader */
 	int	run = RUN;		/* run - address where to start binary file */
@@ -114,6 +116,17 @@ int main (int argc, char *argv[]) {
 			}
 			continue;
 		}
+		if (!strcmp(argv[i], "-x")) {
+			if (str2int(argv[++i], &xaddress)) {
+				fprintf(stderr, "After -x must follow decadic address !\n");
+				return 1;
+			}
+			if (xaddress > 65535) {
+				fprintf(stderr, "Maximum number after -x is 65535!\n");
+				return 1;
+			}
+			continue;
+		}
 		if (!strcmp(argv[i], "-b")) {
 			basic = 1;
 			continue;
@@ -146,7 +159,7 @@ int main (int argc, char *argv[]) {
 		}
 		if (!strcmp(argv[i], "-cb")) {
 			if (str2int(argv[++i], &cb)) {
-				fprintf(stderr, "After -cb must follow decadic address !\n");
+				fprintf(stderr, "After -cb must follow decadic number !\n");
 				return 1;
 			}
 			if (cb > 7) {
@@ -157,7 +170,7 @@ int main (int argc, char *argv[]) {
 		}
 		if (!strcmp(argv[i], "-cp")) {
 			if (str2int(argv[++i], &cp)) {
-				fprintf(stderr, "After -cp must follow decadic address !\n");
+				fprintf(stderr, "After -cp must follow decadic number !\n");
 				return 1;
 			}
 			if (cp > 65535) {
@@ -168,7 +181,7 @@ int main (int argc, char *argv[]) {
 		}
 		if (!strcmp(argv[i], "-ci")) {
 			if (str2int(argv[++i], &ci)) {
-				fprintf(stderr, "After -ci must follow decadic address !\n");
+				fprintf(stderr, "After -ci must follow decadic number !\n");
 				return 1;
 			}
 			if (ci > 65535) {
@@ -361,6 +374,7 @@ int main (int argc, char *argv[]) {
 		printf("Warning: File exceed 49151 limit!\n");
 		
 	if (program) proglen=inputlen;
+	else proglen=xaddress;
 	
 	checksum ^= *(tap+tap_index++) = inputlen % 256;
 	checksum ^= *(tap+tap_index++) = inputlen / 256;
