@@ -77,4 +77,14 @@ tap2tzx: endian-compat.h tap2tzx.c
 	${CXX} ${CXXFLAGS} -o ../bin/tap2tzx tap2tzx.c
 
 permutor: permutor.c
-	${CPP} ${CXXFLAGS} -o ../bin/permutor permutor.c
+	${CXX} ${CXXFLAGS} -o ../bin/permutor permutor.c
+
+lstrd: lstrd.c
+	${CXX} ${CXXFLAGS} -o ../bin/lstrd lstrd.c
+
+createtrd: createtrd.c
+	${CXX} ${CXXFLAGS} -o ../bin/createtrd createtrd.c
+
+hobeta2trd: hobeta2trd.c
+	${CXX} ${CXXFLAGS} -o ../bin/hobeta2trd hobeta2trd.c
+
