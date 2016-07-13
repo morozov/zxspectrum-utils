@@ -229,10 +229,10 @@ int main(int argc, char *argv[])
       }
     fclose(fdi); tstpp(parity);
     }
+  b=fclose(fdo);
   if (stat (meno, &filestat))
     {printf("Can't get size of %s\n",meno);modif();fclose(fdo);remove(meno);exit(1);}
   ll = (int)filestat.st_size;
-  b=fclose(fdo);
   if (b<0) printf("Warning: Can't close %s\n",meno);
   printf("Done. Output file %s is %d bytes length.\n",meno,ll);
   return(0);
