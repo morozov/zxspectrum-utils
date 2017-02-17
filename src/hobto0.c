@@ -66,10 +66,13 @@ FILE* novysubor (char *meno)
   int a;
   FILE *b;
   char *mm;
+  struct stat s;
+
   mm=meno+strlen(meno);
   for (a=0,b=NULL;(a<1000)&&(b==NULL);a++)
     {
     sprintf(mm,".%03d",a);
+    if (!stat(meno,&s)) continue;
     b=fopen(meno,"wb");
     }
   return(b);
