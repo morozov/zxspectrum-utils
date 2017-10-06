@@ -36,32 +36,32 @@ void create (char *filename, char *diskname, int diskformatcode)
 	int number_of_tracks;
 	FILE *f;
 
-	// inicializace tracku
+	/* inicializace tracku */
 	for (i = 0; i < SEC_SIZE; i++) empty_sector.byte[i] = 0;
 	for (i = 0; i < 16; i++) track.sector[i] = empty_sector;
 
-	// tvorba 8. sektoru číslo 7
+	/* tvorba 8. sektoru číslo 7 */
 /*	track.sector[INFO_SEC].byte[OFFSET_FIRSTSECTOR] = 0;		// není potřeba zapisovat*/
 	track.sector[INFO_SEC].byte[OFFSET_FIRSTTRACK] = 1;
 	track.sector[INFO_SEC].byte[OFFSET_DISKFORMAT] = diskformatcode;
 	switch (diskformatcode)
 	{
-		case 22: // 80DS
+		case 22: /* 80DS */
 			track.sector[INFO_SEC].byte[OFFSET_FREESECTORS] = 240;
 			track.sector[INFO_SEC].byte[OFFSET_FREESECTORS+1] = 9;
 			number_of_tracks = 80*2-1;
 			break;
-		case 23: // 40DS
+		case 23: /* 40DS */
 			track.sector[INFO_SEC].byte[OFFSET_FREESECTORS] = 240;
 			track.sector[INFO_SEC].byte[OFFSET_FREESECTORS+1] = 4;
 			number_of_tracks = 40*2-1;
 			break;
-		case 24: // 80SS
+		case 24: /* 80SS */
 			track.sector[INFO_SEC].byte[OFFSET_FREESECTORS] = 240;
 			track.sector[INFO_SEC].byte[OFFSET_FREESECTORS+1] = 4;
 			number_of_tracks = 80-1;
 			break;
-		case 25: // 40SS
+		case 25: /* 40SS */
 			track.sector[INFO_SEC].byte[OFFSET_FREESECTORS] = 112;
 			track.sector[INFO_SEC].byte[OFFSET_FREESECTORS+1] = 2;
 			number_of_tracks = 40-1;
@@ -82,19 +82,19 @@ void create (char *filename, char *diskname, int diskformatcode)
 		i++;
 	}
 	
-	// vytvořit soubor a ohlásit chybu, kdyľ se to nepovede
+	/* vytvořit soubor a ohlásit chybu, kdyľ se to nepovede */
 	f = fopen (filename, "w");
 	if (f == NULL) 
 	{
 		printf ("ERROR: file open failed.\n");
 		exit (-1);
 	}
-	// zapsat první track
+	/* zapsat první track */
 	fwrite (&track, sizeof(trdos_track), 1, f);
-	// vynulovat systémový sektor (uľ nebude potřeba a proměnnou pro track pouľiju jinak) a zapsat tracky pro data
+	/* vynulovat systémový sektor (uľ nebude potřeba a proměnnou pro track pouľiju jinak) a zapsat tracky pro data */
 	track.sector[INFO_SEC] = empty_sector;
 	for (i = 0; i < number_of_tracks; i++) fwrite (&track, sizeof(trdos_track), 1, f);
-	// zavřít soubor
+	/* zavřít soubor */
 	fclose (f);
 }
 
@@ -124,13 +124,13 @@ int main(int argc, char *argv[])
 	int correct;
 	int diskformatcode;
 
-	switches = 1;		// počet přepínačů
-	parsermode = 0;		// 0 - čtení voleb (options), 1 - čtení formátu, 2 - čtení jména trdosové diskety (trdos floppy disk name)
-	diskformatcode = 22;	// implicitně 80DS
+	switches = 1;		/* počet přepínačů */
+	parsermode = 0;		/* 0 - čtení voleb (options), 1 - čtení formátu, 2 - čtení jména trdosové diskety (trdos floppy disk name) */
+	diskformatcode = 22;	/* implicitně 80DS */
 	diskname = NULL;
 	for (counter = 1; counter < argc; counter++)
 	{
-//		printf ("++DEBUG++ %i ++ %s \n",counter, argv[counter]);
+/*		printf ("++DEBUG++ %i ++ %s \n",counter, argv[counter]); */
 		correct=0;
 		switch (parsermode)
 		{
@@ -215,7 +215,7 @@ int main(int argc, char *argv[])
 				}
 				if ((correct == 0) && (counter != (argc-1)))
 				{
-					// poslední parametr bude jméno diskety
+					/* poslední parametr bude jméno diskety */
 					printf ("ERROR: unknown parametr - \"%s\"\n", argv[counter]);
 					help ();
 					return (-1);

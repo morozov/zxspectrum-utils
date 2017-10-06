@@ -25,7 +25,7 @@
 #define TRK_SIZE 16
 #define INFO_SEC 8
 
-// TRDOS INFO SECTOR
+/* TRDOS INFO SECTOR */
 #define OFFSET_FIRSTSECTOR	225		/* První volný sektor pouľitelný k uloľení souboru. */
 #define OFFSET_FIRSTTRACK	226		/* První volný track pouľitelný k uloľení souboru. */
 #define OFFSET_DISKFORMAT	227		/* Formát 22=80tr/DS, 23=40tr/DS, 24=80tr/SS, 25=40tr/SS */
