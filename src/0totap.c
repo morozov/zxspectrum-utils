@@ -202,8 +202,15 @@ int main(int argc, char *argv[])
       b = fread(head+3,1,19,fdi);
       if (b < 19) {uneof();fclose(fdo);remove(meno);exit(1);}
 
-      for(b=4;b<14;b++) putchar(head[b]<32 ? '.' : head[b]); putchar(' ');
-      for (parity=0,b=2;b<21;b++) parity ^= head[b]; tstpp(parity);
+      for(b=4;b<14;b++)
+        putchar(head[b]<32 ? '.' : head[b]);
+      
+      putchar(' ');
+      
+      for (parity=0,b=2;b<21;b++)
+        parity ^= head[b];
+      
+      tstpp(parity);
 
       fseek(fdo, 0, SEEK_CUR);
       printf("%6d\t%-12s %03u..%05u ",

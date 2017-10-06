@@ -85,7 +85,11 @@ int main(int argc, char *argv[])
     if (b!=c)
       {printf("bad check sum in header\n");fclose(fdi);continue;}
     
-    for(b=0;b<8;b++) printf("%c", head[b]<32 ? '.' : head[b]); printf(" ");
+    for(b=0;b<8;b++)
+      printf("%c", head[b]<32 ? '.' : head[b]);
+    
+    printf(" ");
+    
     switch(head[8])
       {
       case 'B': b=9; break;
