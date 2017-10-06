@@ -51,6 +51,7 @@
 
 #define BYTE unsigned char
 #define WORD unsigned short int
+#define DWORD unsigned int
 #define SEKTORLENGTH 1024
 #define DISKLENGTH 128*8*2*SEKTORLENGTH // cylynders*sectors*sides*bytes
 #define DATAFAT 0x100    // At first, look for available sectors from this
@@ -108,7 +109,7 @@ typedef struct {                          // ITEM record (Records in directory)
                 BYTE time[2];
                 BYTE tapheader[17];
                 WORD bodyaddr;
-                unsigned long bodylength;
+                DWORD bodylength;
                 BYTE bodyflag;
                 BYTE attr;
                 WORD firstsec;
@@ -268,7 +269,7 @@ BYTE tap2mdb (void)
           itemrec.ident=0xB0;         // file with header and body
           memcpy(&itemrec.tapheader[0],&header.blockinfo.type,17);
           itemrec.bodyaddr=0x4001;    // Doesn't matter (Bulgar constant ;)
-          itemrec.bodylength=(unsigned long)header.blocklength;  // body length
+          itemrec.bodylength=(DWORD)header.blocklength;  // body length
 #ifdef DEBUG
           printheader(&header);
 #endif
@@ -281,7 +282,7 @@ BYTE tap2mdb (void)
             itemrec.tapheader[0]=0x04;  // !!! CONTINUE (Bulgar constant ;) !!!
             memcpy(&itemrec.tapheader[1],noname,10);
             itemrec.bodyaddr=0x4001;    // Doesn't matter (Bulgar constant ;)
-            itemrec.bodylength=(unsigned long)header.blockinfo.blocklength-2; // data length
+            itemrec.bodylength=(DWORD)header.blockinfo.blocklength-2; // data length
           }
           oldflag=header.blockinfo.flag;           // remember flag
           itemrec.bodyflag=header.blockinfo.flag;
