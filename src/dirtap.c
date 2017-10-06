@@ -133,7 +133,7 @@ int main(int argc, char *argv[])
         {
         if (telo) printf("body ");
         dif = poz + 2 + len - siz;
-        if (dif > 0) {nemam(FROM_SHORT(&dif));fclose(fd);chyba=1;break;}
+        if (dif > 0) {nemam(FROM_SHORT(&dif));chyba=1;break;}
         obsah += len-2;
         if (!testuj) fseek(fd,len-1,SEEK_CUR);
         else
