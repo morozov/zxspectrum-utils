@@ -54,8 +54,9 @@ int lstrdos (char *filename, int listmode)
 	char *trdospassword;
 	int freesectors;
 	int i;
-//	char *diskformat; //not used yet
+/*	char *diskformat; //not used yet */
 	int trdosfile;
+	int lichy;
 	
 	inputfile=open (filename,0);
 	if (!inputfile)
@@ -68,7 +69,7 @@ int lstrdos (char *filename, int listmode)
 	
 	if (read (inputfile, directory,9*SEC_SIZE)==9*SEC_SIZE)
 	{	
-		// soubor otevøen a naèten v pamìti, teï by nemìlo být mo¾né, aby nastala chyba
+		/* soubor otevøen a naèten v pamìti, teï by nemìlo být mo¾né, aby nastala chyba */
 		trdosdiskname=(char*)malloc (11);
 		for (i=0; i<10; i++)
 		{
@@ -86,15 +87,17 @@ int lstrdos (char *filename, int listmode)
 		freesectors=directory[INFO_SEC*SEC_SIZE + OFFSET_FREESECTORS]+256*directory[INFO_SEC*SEC_SIZE + OFFSET_FREESECTORS+1];
 		trdosfilename=(char*)malloc (8);
 			
-		// Výpis
+		/* Výpis */
 		switch (listmode)
 		{
 			case 2:
-				// re¾im EXTRA SHORT (haven't equivalent in real TRDOS, but may be usefull for
-				//  *nix operating systems for batch operations with files
+				/* 
+				   re¾im EXTRA SHORT (haven't equivalent in real TRDOS, but may be usefull for
+				   *nix operating systems for batch operations with files
+				*/
 				for (trdosfile=0; trdosfile<directory[INFO_SEC*SEC_SIZE + OFFSET_FILES]; trdosfile++)
 				{
-					// jméno souboru
+					/* jméno souboru */
 					for (i=0; i<8; i++)
 					{
 						trdosfilename[i]=directory[i+16*trdosfile];
@@ -104,24 +107,23 @@ int lstrdos (char *filename, int listmode)
 				}
 				break;
 			case 1:
-				// re¾im CAT
+				/* re¾im CAT */
 				printf ("Title:  %s\n",trdosdiskname);
 				printf ("%i File(s)\n",directory[INFO_SEC*SEC_SIZE + OFFSET_FILES]);
 				printf ("%i Deleted File(s)\n\n",directory[INFO_SEC*SEC_SIZE + OFFSET_DELETEDFILES]);
 
-				int lichy;
 				lichy=0;
 
 				for (trdosfile=0; trdosfile<directory[INFO_SEC*SEC_SIZE + OFFSET_FILES]; trdosfile++)
 				{
-					// jméno souboru
+					/* jméno souboru */
 					for (i=0; i<8; i++)
 					{
 						trdosfilename[i]=directory[i+16*trdosfile];
 					}
 					trdosfilename[8]=0;
 					printf ("%s <%c> ",trdosfilename,directory[trdosfile*16+8]);
-					// délka v sektorech
+					/* délka v sektorech */
 					printalignednumber (directory[trdosfile*16+13], 3, " ");
 					
 					if (lichy==1) { printf ("\n"); lichy=0; } else { printf ("  "); lichy=1;}
@@ -132,7 +134,7 @@ int lstrdos (char *filename, int listmode)
 				break;
 			case 0:
 			default:
-				// re¾im LIST
+				/* re¾im LIST */
 				printf ("Diskname: %s\n",trdosdiskname);
     				printf ("Password: %s\n",trdospassword);
 				switch (directory[INFO_SEC*SEC_SIZE + OFFSET_DISKFORMAT])
@@ -161,14 +163,14 @@ int lstrdos (char *filename, int listmode)
 				printf ("--------------------------------------------------------------\n");
 				for (trdosfile=0; trdosfile<directory[INFO_SEC*SEC_SIZE + OFFSET_FILES]; trdosfile++)
 				{
-					// jméno souboru
+					/* jméno souboru */
 					for (i=0; i<8; i++)
 					{
 						trdosfilename[i]=directory[i+16*trdosfile];
 					}
 					trdosfilename[8]=0;
 					printf ("%s <%c>  ",trdosfilename,directory[trdosfile*16+8]);
-					// typ souboru
+					/* typ souboru */
 					switch (directory[trdosfile*16+8])
 					{
 						case 'b':
@@ -199,30 +201,30 @@ int lstrdos (char *filename, int listmode)
 							printf ("UNKNOWN      ");
 							break;
 					}
-					// délka v sektorech
+					/* délka v sektorech */
 					printalignednumber (directory[trdosfile*16+13], 5, " ");
 					printf ("  ");
 					switch (directory[trdosfile*16+8])
 					{
 						case 'b':
 						case 'B':
-							// délka basicu
+							/* délka basicu */
 							printalignednumber (directory[trdosfile*16+11]+256*directory[trdosfile*16+12], 6, " ");
-							// délka basicu bez promìnných
+							/* délka basicu bez promìnných */
 							printalignednumber (directory[trdosfile*16+9]+256*directory[trdosfile*16+10], 7, " ");
 							break;
 						default:
-							// adresa kam se soubor nahraje do RAM, není-li explicitnì urèeno jinak
+							/* adresa kam se soubor nahraje do RAM, není-li explicitnì urèeno jinak */
 							printalignednumber (directory[trdosfile*16+9]+256*directory[trdosfile*16+10], 6, " ");
-							// délka v bytech
+							/* délka v bytech */
 							printalignednumber (directory[trdosfile*16+11]+256*directory[trdosfile*16+12], 7, " ");
 							break;
 					}
 					printf ("   ");
-					// první stopa zabraná souborem
+					/* první stopa zabraná souborem */
 					printalignednumber (directory[trdosfile*16+15], 3, " ");
 					printf ("    ");
-					// první sektor zabraný souborem
+					/* první sektor zabraný souborem */
 					printalignednumber (directory[trdosfile*16+14], 3, " ");
 					printf ("\n");
 				}
@@ -263,13 +265,13 @@ int main(int argc, char *argv[])
 	int switches;
 	int correct;
 
-	// vstupní soubor je to co není jiným parametrem, výstupní soubor není
-	// printf ("DEBUG: argc - %i\n", argc);
+	/* vstupní soubor je to co není jiným parametrem, výstupní soubor není */
+	/* printf ("DEBUG: argc - %i\n", argc); */
 
 	switches=1;
 	for (counter=1; counter<argc; counter++)
 	{
-//		printf ("++ %i ++ %s \n",counter, argv[counter]);
+/*		printf ("++ %i ++ %s \n",counter, argv[counter]); */
 		correct=0;
 		
 		if (!strcmp(argv[counter],"-h") || (!strcmp(argv[counter],"--help")))
@@ -306,9 +308,11 @@ int main(int argc, char *argv[])
 		}
 		if ((correct==0) && (counter!=(argc-1)))
 		{
-			// nepochopitelný parametr je tolerován jen jako poslední, to toti¾ musí být
-			// jméno souboru, jestli je platné, to se uká¾e pozdìji, pokud by byl nepochopitelný 
-			// parametr nalezen døíve ne¾ na posledním místì, bude zobrazena nápovìda
+			/*
+			   nepochopitelný parametr je tolerován jen jako poslední, to toti¾ musí být
+			   jméno souboru, jestli je platné, to se uká¾e pozdìji, pokud by byl nepochopitelný 
+			   parametr nalezen døíve ne¾ na posledním místì, bude zobrazena nápovìda
+			*/
 			printf ("ERROR: incorrect parametr - \"%s\"\n", argv[counter]);
 			printf ("Hint: Filename must be last parameter.\n");
 			help ();
@@ -318,7 +322,7 @@ int main(int argc, char *argv[])
 
 	filename=argv[argc-1];
 
-	// printf ("DEBUG: switches - %i \n", switches);
+	/* printf ("DEBUG: switches - %i \n", switches); */
 
 	if (switches!=argc-1)
 	{

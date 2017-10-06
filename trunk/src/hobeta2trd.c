@@ -28,7 +28,7 @@
 
 #define VERSION			"0.2beta"
 
-// Hobeta head offsets - nelze jinak, proto¾e kompiler GCC zarovnává na 2 byty a to se kvùli 9 bytovému názvu silnì nehodí
+/* Hobeta head offsets - nelze jinak, proto¾e kompiler GCC zarovnává na 2 byty a to se kvùli 9 bytovému názvu silnì nehodí */
 #define HH_FILENAME	0
 #define HH_EXTENSION	8
 #define HH_ADDRESS	9
@@ -41,7 +41,7 @@ typedef struct {
 	unsigned char byte[17];
 } hobetahead;
 
-// globální parametry
+/* globální parametry */
 int	verbose = 0;
 int	force = 0;
 
@@ -54,12 +54,12 @@ header.tr_head.tr_crc = CheckSum;*/
 
 int convert (char* source_filename, char* target_filename)
 {
-//	unsigned char directory [9*SEC_SIZE];	//not used
+/*	unsigned char directory [9*SEC_SIZE];	//not used */
 	hobetahead header;
-//	unsigned char memory [65536];	//not used
+/*	unsigned char memory [65536];	//not used */
 	FILE *inputfile;
 	FILE *outputfile;
-	int i;//,c; //not used
+	int i;/*,c; //not used */
 	trdos_sector sector;
 	trdos_track track;
 	int sector_number;
@@ -83,20 +83,20 @@ int convert (char* source_filename, char* target_filename)
 		exit (-1);
 	}
 
-	// pøeèti hlavièku souboru formátu "hobeta"
+	/* pøeèti hlavièku souboru formátu "hobeta" */
 	if (fread (&header, sizeof (hobetahead), 1, inputfile) == 1)
 	{	
-		// pøeèti direktoráø souboru formátu "trdos image"
+		/* pøeèti direktoráø souboru formátu "trdos image" */
 		if (fread (&track, sizeof (trdos_track), 1, outputfile) == 1)
 		{	
-			// Zkontroluj správnost souborù
+			/* Zkontroluj správnost souborù */
 			fatal_error_found = 0;
 			if ((track.sector[INFO_SEC].byte[OFFSET_TRDOSIDENT] != 16) && (!force))
 			{
 				printf ("Missing TRDOS identification in target file, you can try -f (force) parameter, but only if you know what you are doing. You are warned.\n");
 				fatal_error_found = 1;
 			}
-			if (0  && (!force)) // doplnit!!!
+			if (0  && (!force)) /* doplnit!!! */
 			{
 				printf ("Wrong CRC in source Hobeta file.\n");
 				fatal_error_found = 1;
@@ -122,23 +122,25 @@ int convert (char* source_filename, char* target_filename)
 				fclose (outputfile);
 				exit (-1);
 			}
-			// Vypi¹ parametry - pokud verbose
+			/* Vypi¹ parametry - pokud verbose */
 			if (verbose)
 			{
-				// source
+				/* source */
 				printf ("Hobeta file: %s\n", source_filename);
 				for (i = 0; i < 8; i++) printf ("%c",header.byte[HH_FILENAME+i]);
 				printf (".%c %u, %u, ",header.byte[HH_EXTENSION], header.byte[HH_ADDRESS]+header.byte[HH_ADDRESS+1]*256, header.byte[HH_LENGTH]+header.byte[HH_LENGTH+1]*256);
 				printf ("%u (CRC %u)\n", header.byte[HH_SECTORS], header.byte[HH_CRC]+header.byte[HH_CRC+1]*256);
-				// target
+				/* target */
 				printf ("TRDOS image: %s\n", target_filename);
 				printf ("Free %u sectors, Files %u, Deleted %u\n",track.sector[INFO_SEC].byte[OFFSET_FREESECTORS+1]*256+track.sector[INFO_SEC].byte[OFFSET_FREESECTORS], track.sector[INFO_SEC].byte[OFFSET_FILES], track.sector[INFO_SEC].byte[OFFSET_DELETEDFILES]);
 			}
-			// DATA SOUBORU
-			// najít první volný sektor a stopu, zaseekovat v cílovém souboru a plnit jeden sektor za druhým dokud jsou 
-			// data na vstupu
-			// soubor hobeta je v¾dy dlouhý 256*n+17 bytù, kde n se mìní podle poètu sektorù na TRDOSové disketì, které 
-			// soubor obsazoval/obsadí => je mo¾no naèítat a zapisovat pøímo po sektorech
+			/*
+			   DATA SOUBORU
+			   najít první volný sektor a stopu, zaseekovat v cílovém souboru a plnit jeden sektor za druhým dokud jsou 
+			   data na vstupu
+			   soubor hobeta je v¾dy dlouhý 256*n+17 bytù, kde n se mìní podle poètu sektorù na TRDOSové disketì, které 
+			   soubor obsazoval/obsadí => je mo¾no naèítat a zapisovat pøímo po sektorech
+			*/
 			sector_number = track.sector[INFO_SEC].byte[OFFSET_FIRSTSECTOR];
 			track_number = track.sector[INFO_SEC].byte[OFFSET_FIRSTTRACK];
 			freesectors = track.sector[INFO_SEC].byte[OFFSET_FREESECTORS+1]*256+track.sector[INFO_SEC].byte[OFFSET_FREESECTORS];
@@ -161,9 +163,9 @@ int convert (char* source_filename, char* target_filename)
 					fclose (outputfile);
 					exit (-1);
 				}
-				// DEBUG for (i = 0; i < 16; i++) printf ("%u ", sector.byte[i]); printf ("\n");
-				// zapi¹ sektor (pøedpokládám, ¾e se vejde, proto¾e si to spoèítám a zkontroluju pøedem)
-				if (fwrite (&sector, sizeof (trdos_sector), 1, outputfile) != 1)	// ZÁPIS
+				/* DEBUG for (i = 0; i < 16; i++) printf ("%u ", sector.byte[i]); printf ("\n"); */
+				/* zapi¹ sektor (pøedpokládám, ¾e se vejde, proto¾e si to spoèítám a zkontroluju pøedem) */
+				if (fwrite (&sector, sizeof (trdos_sector), 1, outputfile) != 1)	/* ZÁPIS */
 				{
 					printf ("Sector writing in %s failed.\n", target_filename);
 					fclose (inputfile);
@@ -171,23 +173,23 @@ int convert (char* source_filename, char* target_filename)
 					exit (-1);
 				}
 			}
-			// ADRESÁØ
+			/* ADRESÁØ */
 			fseek (outputfile, 0, SEEK_SET);
-			dir_sector = track.sector[INFO_SEC].byte[OFFSET_FILES] / 16;		// zjisti kam zapsat jméno souboru
-			directory_offset = (track.sector[INFO_SEC].byte[OFFSET_FILES] % 16)*16;	// vèetnì polo¾ky v sektoru
-			// tvorba hlavièky souboru v adresáøi (pøenesu jméno+pøípona+adresa+délka - v¹e najednou, proto¾e to jde)
+			dir_sector = track.sector[INFO_SEC].byte[OFFSET_FILES] / 16;		/* zjisti kam zapsat jméno souboru */
+			directory_offset = (track.sector[INFO_SEC].byte[OFFSET_FILES] % 16)*16;	/* vèetnì polo¾ky v sektoru */
+			/* tvorba hlavièky souboru v adresáøi (pøenesu jméno+pøípona+adresa+délka - v¹e najednou, proto¾e to jde) */
 			for (i = 0; i < 13; i++) track.sector[dir_sector].byte[directory_offset+i] = header.byte[HH_FILENAME+i];
 			track.sector[dir_sector].byte[directory_offset+13] = header.byte[HH_SECTORS];
 			track.sector[dir_sector].byte[directory_offset+14] = track.sector[INFO_SEC].byte[OFFSET_FIRSTSECTOR];
 			track.sector[dir_sector].byte[directory_offset+15] = track.sector[INFO_SEC].byte[OFFSET_FIRSTTRACK];
-			// provedení potøebných zmìn v systémovém sektoru TRDOSu (9. sektor èíslo 8)
-			if (verbose) printf ("\nNew first track and sector %u, %u\n", track_number, sector_number); // první volný sektor a track ...
-			track.sector[INFO_SEC].byte[OFFSET_FIRSTSECTOR] = sector_number;		// zapi¹ èísla prvních volných sek. a tr.
+			/* provedení potøebných zmìn v systémovém sektoru TRDOSu (9. sektor èíslo 8) */
+			if (verbose) printf ("\nNew first track and sector %u, %u\n", track_number, sector_number); /* první volný sektor a track ... */
+			track.sector[INFO_SEC].byte[OFFSET_FIRSTSECTOR] = sector_number;		/* zapi¹ èísla prvních volných sek. a tr. */
 			track.sector[INFO_SEC].byte[OFFSET_FIRSTTRACK] = track_number;
-			track.sector[INFO_SEC].byte[OFFSET_FREESECTORS] = freesectors % 256;		// zapi¹ zbývající volné místo na disku
+			track.sector[INFO_SEC].byte[OFFSET_FREESECTORS] = freesectors % 256;		/* zapi¹ zbývající volné místo na disku */
 			track.sector[INFO_SEC].byte[OFFSET_FREESECTORS+1] = freesectors / 256;
-			track.sector[INFO_SEC].byte[OFFSET_FILES]++;					// zvy¹ poèet souborù o právì zapsaný
-			if (fwrite (&track, sizeof (trdos_track), 1, outputfile) != 1)		// ZÁPIS
+			track.sector[INFO_SEC].byte[OFFSET_FILES]++;					/* zvy¹ poèet souborù o právì zapsaný */
+			if (fwrite (&track, sizeof (trdos_track), 1, outputfile) != 1)		/* ZÁPIS */
 			{
 				printf ("Track writing in %s failed.\n", target_filename);
 				fclose (inputfile);
@@ -210,7 +212,7 @@ int convert (char* source_filename, char* target_filename)
 		fclose (inputfile);
 		exit (-1);
 	}
-	// data zkonvertována, kdyby nastala chyba skonèila by funkce døíve
+	/* data zkonvertována, kdyby nastala chyba skonèila by funkce døíve */
 	return 0;
 }
 
@@ -239,13 +241,13 @@ int main(int argc, char *argv[])
 	int switches;
 	int correct;
 
-	// vstupní soubor je to co není jiným parametrem, výstupní soubor není
-	// printf ("DEBUG: argc - %i\n", argc);
+	/* vstupní soubor je to co není jiným parametrem, výstupní soubor není */
+	/* printf ("DEBUG: argc - %i\n", argc); */
 
 	switches = 1;
 	for (counter=1; counter<argc; counter++)
 	{
-//		printf ("++ %i ++ %s \n",counter, argv[counter]);
+/*		printf ("++ %i ++ %s \n",counter, argv[counter]); */
 		correct = 0;
 
 		if (!strcmp(argv[counter], "-h") || (!strcmp(argv[counter], "--help")))
@@ -276,8 +278,8 @@ int main(int argc, char *argv[])
 		}
 		if ((correct==0) && !((counter==(argc-1)) || (counter==(argc-2))))
 		{
-			// poslední parametr jméno cíle
-			// pøedposlední parametr jméno zdroje
+			/* poslední parametr jméno cíle */
+			/* pøedposlední parametr jméno zdroje */
 			printf ("ERROR: unknown parametr - \"%s\"\n", argv[counter]);
 			help ();
 			return (-1);
