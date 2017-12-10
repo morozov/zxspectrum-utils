@@ -129,11 +129,11 @@ int main(int argc,char *argv[])
     }
     break;
    case 1:                                // It's not SDOS disk image
-    printf("'%s' is not D80 disk image!\n",argv[2]);
+    printf("'%s' is not D80 disk image!\n",argv[1]);
     retval=3;
     break;
    default:                               // SDOS image has not supported format
-    printf("Existing D80 image in '%s' is not supported!\n",argv[2]);
+    printf("Existing D80 image in '%s' is not supported!\n",argv[1]);
     retval=4;
   }
   freediskimg();                          // free allocated memory
