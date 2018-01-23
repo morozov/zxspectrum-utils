@@ -88,3 +88,8 @@ createtrd: createtrd.c
 hobeta2trd: hobeta2trd.c
 	${CXX} ${CXXFLAGS} -o ../bin/hobeta2trd hobeta2trd.c
 
+dithvide: dithvide.c
+	${CXX} ${CXXFLAGS} -lX11 -ljpeg -o ../bin/dithvide dithvide.c
+
+divideogen: divideogen.c
+	${CXX} ${CXXFLAGS} -lpng -o ../bin/divideogen divideogen.c

@@ -35,6 +35,8 @@
      tap2mbhdd .. convertor TAP=>MBHDD
      tap2tzx ...... convertor TAP=>TZX
      tzx2tap ...... convertor TZX=>TAP
+     dithvide ..... convertor JPG=>TAP
+     divideogen . convertor video=>TAP
 
   Utils
   -----
