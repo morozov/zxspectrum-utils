@@ -89,7 +89,7 @@ hobeta2trd: hobeta2trd.c
 	${CXX} ${CXXFLAGS} -o ../bin/hobeta2trd hobeta2trd.c
 
 dithvide: dithvide.c
-	${CXX} ${CXXFLAGS} -lX11 -ljpeg -o ../bin/dithvide dithvide.c
+	${CXX} dithvide.c ${CXXFLAGS} -lX11 -ljpeg -o ../bin/dithvide
 
 divideogen: divideogen.c
-	${CXX} ${CXXFLAGS} -lpng -o ../bin/divideogen divideogen.c
+	${CXX} divideogen.c ${CXXFLAGS} -lpng -o ../bin/divideogen
