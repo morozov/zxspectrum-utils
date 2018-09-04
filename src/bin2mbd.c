@@ -11,7 +11,7 @@
 #define	FAT_FILE	0x80
 #define	FAT_ITEM_FAT	0x80
 #define	FAT_ITEM_DIRS	0x20
-#define	VERSION		"bin2mbd v.1.0"
+#define	VERSION		"bin2mbd v.1.1"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -386,11 +386,15 @@ int main(int argc, char* argv[])
 		foutname[254] = '\0';
 	}
 
-	foutput = fopen(foutname, "ab+");
+	foutput = fopen(foutname, "rb+");
 	if (!foutput)
 	{
-		fprintf(stderr, "Output file open failed!\n");
-		return 2;
+		foutput = fopen(foutname, "wb+");
+		if (!foutput)
+		{
+			fprintf(stderr, "Output file open failed!\n");
+			return 2;
+		}
 	}
 
 	if (fseek(foutput, 0, SEEK_END) != 0)
@@ -703,6 +707,7 @@ int main(int argc, char* argv[])
 skip_input:
 	set_fat_checksum(disk_image + image_boot->sec_fat1[0] * 1024,
 		image_boot->fat_sectors[0]);
+	fseek(foutput, 0, SEEK_SET);
 	fwrite(disk_image, 1, disk_size, foutput);
 	fclose(foutput);
 	free(disk_image);
