@@ -34,8 +34,10 @@ struct s_boot
 	unsigned char sec_fat2[2];
 	unsigned char syst_ident_xor;
 
-	unsigned char not_used2[9];
-
+	unsigned char not_used2[3];
+	
+	unsigned char sec234_fat12[6];
+	
 	unsigned char mark_2;
 	unsigned char time[4];
 	unsigned char mark_3;
@@ -429,6 +431,15 @@ int main(int argc, char* argv[])
 		image_boot->sec_fat1[1] = 0;
 		image_boot->sec_fat2[0] = 2 + image_boot->fat_sectors[0];
 		image_boot->sec_fat2[1] = 0;
+		for (i=1; i<4; i++) {
+			if (i<image_boot->fat_sectors[0]) {
+				image_boot->sec234_fat12[(i<<1)-2] = i + image_boot->sec_fat1[0];
+				image_boot->sec234_fat12[(i<<1)-1] = i + image_boot->sec_fat2[0];
+			} else {
+				image_boot->sec234_fat12[(i<<1)-2] = 0;
+				image_boot->sec234_fat12[(i<<1)-1] = 0;
+			}
+		}
 		image_boot->dirs[0] = image_boot->sec_fat2[0] +
 					image_boot->fat_sectors[0];
 		image_boot->dirs[1] = 0;
@@ -467,7 +478,7 @@ int main(int argc, char* argv[])
 			}
 			else
 			{
-				*p++ = i + 7;
+				*p++ = i + 3 + image_boot->fat_sectors[0];
 				*p++ = 0xC0;
 			}
 		}
