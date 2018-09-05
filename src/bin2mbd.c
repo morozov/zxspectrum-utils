@@ -17,6 +17,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <libgen.h>
 
 struct s_boot
 {
@@ -247,6 +248,8 @@ int main(int argc, char* argv[])
 	int nsectors = 11;			/* no. of sectors per track */
 	int nsurfaces = 2;			/* no. of surfaces on disc */
 	int address = ADDRESS;			/* start adress*/
+	char *in_basename;			/* raw basename pointer */
+	char finname[11];			/* input file name */
 	char foutname[255];			/* output file name */
 	FILE *finput, *foutput;			/* finput - input file descriptor
 						   foutput - output file descriptor */
@@ -352,6 +355,14 @@ int main(int argc, char* argv[])
 				return 1;
 			}
 			finname_i = i;
+			in_basename = basename(argv[i]);
+			if (!strcmp(in_basename, "/") || !strcmp(in_basename, "\\")
+					|| !strcmp(in_basename, ".") || !strcmp(in_basename, ".."))
+			{
+				fprintf(stderr, "Invalid input file name\n");
+				return 1;
+			}
+			stpncpy(finname, in_basename, 10);
 		}
 	}	/* arguments */
 
@@ -458,8 +469,8 @@ int main(int argc, char* argv[])
 		no *= 2;
 		memset(p, 0, no);
 		memset(p + no, 0xFF, image_boot->fat_sectors[0] * 1024 - no);
-		memcpy(p, fat_c, sizeof(fat_c));
-		p += 4;
+		memcpy(p, fat_c, sizeof(fat_c)-1);
+		p += sizeof(fat_c)-1;
 		for (i = 0; i < image_boot->fat_sectors[0]; i++)
 		{
 			if (i == image_boot->fat_sectors[0] - 1)
@@ -618,7 +629,7 @@ int main(int argc, char* argv[])
 				image_dir->time[0] = image_dir->time[1] =
 					image_dir->time[2] = image_dir->time[3] = 0;
 				image_dir->h_type = 3;	/* BYTES */
-				memcpy(image_dir->h_name, foutname, 10);
+				memcpy(image_dir->h_name, finname, 10);
 				for (no = 0; no < 10; no++)
 					if (image_dir->h_name[no] == 0 ||
 						image_dir->h_name[no] == '.')
