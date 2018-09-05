@@ -6,6 +6,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <libgen.h>
 
 int str2int (char *str, int *num) {
 	int i=0;
@@ -62,6 +63,8 @@ int main (int argc, char *argv[]) {
 	FILE	*foutput, *finput;	/* foutput - output file descriptor */
 					/* finput - input file description */
 	int	foutname_i = 0;		/* foutname_i - index to name in argv field */
+	char	*in_basename;		/* raw basename pointer */
+	char	finname[11];		/* input file name */
 	char	foutname[255];		/* foutname - output file name */
 	int	finname_i = 0;		/* finname_i - index to name in argv field */
 
@@ -206,8 +209,17 @@ int main (int argc, char *argv[]) {
 			printf("Yebo!\n");
 			return 1;
 		}
-		if (!finname_i)
+		if (!finname_i) {
 			finname_i = i;
+			in_basename = basename(argv[i]);
+			if (!strcmp(in_basename, "/") || !strcmp(in_basename, "\\")
+					|| !strcmp(in_basename, ".") || !strcmp(in_basename, ".."))
+			{
+				fprintf(stderr, "Invalid input file name\n");
+				return 1;
+			}
+			stpncpy(finname, in_basename, 10);
+		}
 		else {
 			fprintf(stderr, "Input only one bin. file!\n");
 			return 1;
@@ -258,8 +270,8 @@ int main (int argc, char *argv[]) {
 	if ((!program) && (basic)) {
 		tap_index = 110+d80;
 		i = 0;
-		while ((*(foutname+i) != '.' && *(foutname+i) != '\0') && i<10) {
-			*(tap+tap_index+i) = *(foutname+i);
+		while ((*(finname+i) != '.' && *(finname+i) != '\0') && i<10) {
+			*(tap+tap_index+i) = *(finname+i);
 			i++;
 		}
 		*(tap+14) = (86+d80+i+19*hp) % 256;
@@ -278,10 +290,10 @@ int main (int argc, char *argv[]) {
 		else {
 			in_name = 1;
 			for (i = 0; i < 10; ++i) {			/* filename  */
-				if (in_name && (foutname[i] == '.' || foutname[i] == '\0'))
+				if (in_name && (finname[i] == '.' || finname[i] == '\0'))
 					in_name = 0;
 				if (in_name)
-					checksum ^= *(tap+tap_index++) = foutname[i];
+					checksum ^= *(tap+tap_index++) = finname[i];
 				else
 					checksum ^= *(tap+tap_index++) = ' ';
 			}
@@ -332,7 +344,7 @@ int main (int argc, char *argv[]) {
 			checksum ^= *(tap+tap_index++) = '*';
 		checksum ^= *(tap+tap_index++) = '\"';
 		i = 0;
-		while (((no = foutname[i]) != '.' && no != '\0') && i<10) {
+		while (((no = finname[i]) != '.' && no != '\0') && i<10) {
 			checksum ^= *(tap+tap_index++) = no;
 			i++;
 		}
@@ -362,10 +374,10 @@ int main (int argc, char *argv[]) {
 		checksum = *(tap+tap_index++) = 3;		/* bytes file */
 	in_name = 1;
 	for (i = 0; i < 10; ++i) {	/* filename  */
-		if (in_name && (foutname[i] == '.' || foutname[i] == '\0'))
+		if (in_name && (finname[i] == '.' || finname[i] == '\0'))
 			in_name = 0;
 		if (in_name)
-			checksum ^= *(tap+tap_index++) = foutname[i];
+			checksum ^= *(tap+tap_index++) = finname[i];
 		else
 			checksum ^= *(tap+tap_index++) = ' ';
 	}
