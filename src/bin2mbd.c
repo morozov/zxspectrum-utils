@@ -254,12 +254,12 @@ int main(int argc, char* argv[])
 	FILE *finput, *foutput;			/* finput - input file descriptor
 						   foutput - output file descriptor */
 	long disk_size;				/* size of disk image */
-	unsigned char *disk_image;			/* pointer to disk image */
+	unsigned char *disk_image;		/* pointer to disk image */
 	struct s_boot *image_boot;
 	struct s_dirs *image_dirs;
 	struct s_dir0 *image_dir0;
 	struct s_dir *image_dir;
-	unsigned char *p, *s;				/* pointers into disk image */
+	unsigned char *p, *s;			/* pointers into disk image */
 	int ndir = 0;				/* no. of directory in image */
 
 	for (i = 0; i < argc; i++)
@@ -362,7 +362,7 @@ int main(int argc, char* argv[])
 				fprintf(stderr, "Invalid input file name\n");
 				return 1;
 			}
-			stpncpy(finname, in_basename, 10);
+			strncpy(finname, in_basename, 10);
 		}
 	}	/* arguments */
 
@@ -439,6 +439,9 @@ int main(int argc, char* argv[])
 		image_boot->fat_sectors[0] =
 			no / 512 + ((no % 512 == 0) ? 0 : 1);
 		image_boot->fat_sectors[1] = 0;
+		if (no > 2048) {
+			fprintf(stderr, "Warning: FAT have more than 4 sectors!\n");
+		}
 		image_boot->fat_len[0] = 0; /* spodny bajt je 0 (*1024 % 256) */
 		image_boot->fat_len[1] =
 			(image_boot->fat_sectors[0] * 1024) / 256;
@@ -456,7 +459,7 @@ int main(int argc, char* argv[])
 			}
 		}
 		image_boot->dirs[0] = image_boot->sec_fat2[0] +
-					image_boot->fat_sectors[0];
+			image_boot->fat_sectors[0];
 		image_boot->dirs[1] = 0;
 		val = 0;
 		for (i = 0; i < 32; i++)
@@ -571,12 +574,6 @@ int main(int argc, char* argv[])
 	input_len = ftell(finput);
 	rewind(finput);
 
-	if (input_len > len)
-	{
-		fprintf(stderr, "No free space at output image!\n");
-		return 2;
-	}
-
 	image_dirs = (void*)(disk_image + image_boot->dirs[0] * 1024
 		+ ndir * 4);
 	if (image_dirs->ident != 0x80)	/* create new directory */
@@ -594,6 +591,7 @@ int main(int argc, char* argv[])
 		s = disk_image + image_boot->sec_fat1[0] * 1024 + i * 2;
 		*(s++) = 0;
 		*s = 0x84;
+		len -= 1024;
 		/* vytvorit adresar (polozka v DIRe a v novom sektore) */
 		image_dir0 = (void*)(disk_image + i * 1024);
 		image_dir0->ident = 0x80;
@@ -610,6 +608,12 @@ int main(int argc, char* argv[])
 		for (i = 0; i < 10; i++)
 			no ^= image_dir0->name[i];
 		image_dirs->name_xor = (unsigned char)no;
+	}
+
+	if (input_len > len)
+	{
+		fprintf(stderr, "No free space at output image!\n");
+		return 2;
 	}
 
 	/* najdi volne miesto v adresari a vytvor novu polozku */
