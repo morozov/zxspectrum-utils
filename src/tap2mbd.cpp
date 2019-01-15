@@ -10,7 +10,7 @@
 * Developer:                                                                   *
 *     Ing. Marek Zima, Slovak Republic, marek_zima@yahoo.com or zimam@host.sk  *
 * Bugfixer:                                                                    *
-*     Lubomir Blaha (tritol@trilogic.cz) @2005, Poke @2011, UB880D @2011                                        *
+*     Tritol @2005, Poke @2011, UB880D @2011, Busy @2019                       *
 *------------------------------------------------------------------------------*
 * License:                                                                     *
 *     GNU License                                                              *
@@ -167,7 +167,7 @@ int main(int argc,char *argv[])
 {
  int retval = 0;                        // Suppose everything will be OK
  printf(">>> TAP2MBD %s - @2002 by Marek Zima <<<\n",VERSION);
- printf("Fixed by Tritol @2005, Poke @2011, UB880D @2011\n\n");
+ printf("Fixed by Tritol @2005, Poke @2011, UB880D @2011, Busy @2019\n\n");
  if(argc!=4){
    printf("Syntax: tap2mbd <tapfile.tap> <number of directory> <mbdfile.mbd>\n");
    return(1);
@@ -450,6 +450,7 @@ void createdir (BYTE *name)       // Create DIR in disk image
  memcpy(diskimg+(bootsektor.secdirs*SEKTORLENGTH)+(numofdir*sizeof(DIRSREC)),&rootrec,sizeof(DIRSREC));  // write
  updateFAT(rootrec.firstsec&0x3FFF,0x8400); // Not available, last, 0x400 bytes
  rootitem.ident = 0x80;    // 0 record in directory is his name
+ memset(diskimg + ((rootrec.firstsec & 0x3FFF)*SEKTORLENGTH), 0x00, 0x0400);  // Intialize new directory sector
  memcpy(&rootitem.tapheader[1],name,10);   // copy name to record
  memcpy(diskimg+((rootrec.firstsec&0x3FFF)*SEKTORLENGTH),&rootitem,sizeof(ITEMREC));  // write record to image
 }

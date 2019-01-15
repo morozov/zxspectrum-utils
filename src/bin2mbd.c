@@ -355,7 +355,7 @@ int main(int argc, char* argv[])
 				return 1;
 			}
 			finname_i = i;
-			in_basename = basename(argv[i]);
+			in_basename = (char*)basename(argv[i]);
 			if (!strcmp(in_basename, "/") || !strcmp(in_basename, "\\")
 					|| !strcmp(in_basename, ".") || !strcmp(in_basename, ".."))
 			{
@@ -644,14 +644,14 @@ int main(int argc, char* argv[])
 				}
 				no = input_len % 65536;
 				image_dir->h_len[0] = no % 256;
-				image_dir->h_len[1] = no / 256;
+				image_dir->h_len[1] = (unsigned char)(no / 256);
 				image_dir->h_param1[0] = image_dir->h_param2[0] = 0;
 				image_dir->h_param1[1] = image_dir->h_param2[1] = 0x80;
 				image_dir->address[0] = address % 256;
-				image_dir->address[1] = address / 256;
+				image_dir->address[1] = (unsigned char)(address / 256);
 				image_dir->lenght[0] = input_len & 0x000000FF;
 				image_dir->lenght[1] = (input_len & 0x0000FF00) >> 8;
-				image_dir->lenght[2] = (input_len & 0x00FF0000) >> 16;
+				image_dir->lenght[2] = (unsigned char)((input_len & 0x00FF0000) >> 16);
 				image_dir->lenght[3] = (input_len & 0xFF000000) >> 24;
 				image_dir->flag = 0xFF;
 				image_dir->attribs = 0;
@@ -659,7 +659,7 @@ int main(int argc, char* argv[])
 					1024, image_boot->fat_sectors[0]);
 				len = 0;
 				image_dir->sector[0] = no % 256;
-				image_dir->sector[1] = no / 256;
+				image_dir->sector[1] = (unsigned char)(no / 256);
 				do
 				{
 					fread(disk_image + no * 1024, 1, 1024, finput);
@@ -669,7 +669,7 @@ int main(int argc, char* argv[])
 					{
 						val = input_len % 1024 | 0x8000;
 						*p = val % 256;
-						*(p + 1) = val / 256;
+						*(p + 1) = (unsigned char)(val / 256);
 					}
 					else
 					{
@@ -679,7 +679,7 @@ int main(int argc, char* argv[])
 							image_boot->fat_sectors[0]);
 						val = no | 0xC000;
 						*p = val % 256;
-						*(p + 1) = val / 256;
+						*(p + 1) = (unsigned char)(val / 256);
 					}
 				} while (len++ < input_len / 1024);
 				found = 1;
@@ -701,7 +701,7 @@ int main(int argc, char* argv[])
 				{
 					no = dirsec & 0xC0;
 					*p = no % 256;
-					*(p + 1) = no / 256;
+					*(p + 1) = (unsigned char)(no / 256);
 					p = disk_image + image_boot->sec_fat1[0] * 1024
 						+ 2 * dirsec;
 					*p = 0;
