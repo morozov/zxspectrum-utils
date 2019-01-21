@@ -1,4 +1,5 @@
 /* bin2mbd utility */
+#define DBG 0
 
 /* defaults */
 #define	ADDRESS		32768
@@ -18,6 +19,8 @@
 #include <string.h>
 #include <errno.h>
 #include <libgen.h>
+#include <sys/stat.h>
+#include <time.h>
 
 struct s_boot
 {
@@ -79,7 +82,7 @@ struct s_boot
 
 unsigned char boot_c[] = "\x18\x7E\x80\2\x52\0\x0B\0\2\0\1\0\x0A\0\4\0\x18\x0E\2\0\6\0"
 		"\0\xFF\x1E\0\3\7\4\x08\5\x09"
-		"\0\1\1\0\0\0bin2mbd1.0by mike/zeroteam\0"
+		"\0\1\1\0\0\0bin2mbd1.1by mike/zeroteam\0"
 		"\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"
 		"\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0";
 
@@ -168,7 +171,7 @@ int str2int (char *str, int *num)
 
 void version(void)
 {
-	printf(VERSION"\nCopyright (C) 2009 mike/zeroteam\n");
+	printf(VERSION"\nCopyright (C) 2009, 2019 mike/zeroteam, busy\n");
 }
 
 void usage(void)
@@ -222,6 +225,8 @@ int get_free_sec(unsigned char* fat, int len)
 			break;
 		}
 	
+	if (DBG)
+		printf("Found free sector 0x%03X\n", ret);
 	return ret;
 }
 
@@ -262,7 +267,13 @@ int main(int argc, char* argv[])
 	unsigned char *p, *s;			/* pointers into disk image */
 	int ndir = 0;				/* no. of directory in image */
 
-	for (i = 0; i < argc; i++)
+	struct stat statdata;
+	struct tm *date_time;
+	time_t modified_time = 0;
+	time_t actual_time;
+	unsigned int msdos_date_time = 0;
+
+	for (i = 1; i < argc; i++)
 	{
 		if (!strcmp(argv[i], "-nt"))
 		{
@@ -362,7 +373,12 @@ int main(int argc, char* argv[])
 				fprintf(stderr, "Invalid input file name\n");
 				return 1;
 			}
-			strncpy(finname, in_basename, 10);
+			finname[10] = 0;
+			len = strlen(in_basename);
+			memset(finname, 0x20, 10);
+			memcpy(finname, in_basename, len > 10 ? 10 : len);
+			if (DBG)
+				printf("MBD file name: \"%s\"\n", finname);
 		}
 	}	/* arguments */
 
@@ -418,9 +434,28 @@ int main(int argc, char* argv[])
 
 	if (disk_size == 0L)	/* creating new output file */
 	{
+		time(&actual_time);
+		date_time = localtime(&actual_time);
+		msdos_date_time =
+			(date_time->tm_sec >> 1) |
+			(date_time->tm_min << 5) |
+			(date_time->tm_hour << 11) |
+			(date_time->tm_mday << 16) |
+			((date_time->tm_mon + 1) << 21) |
+			((date_time->tm_year + 1900 - 1980) << 25);
+		if (DBG) printf("Create new image: %02u.%02u.%04u %02u:%02u:%02u  Unix:%u  Msdos:%u\n",
+			date_time->tm_mday,
+			date_time->tm_mon + 1,
+			date_time->tm_year + 1900,
+			date_time->tm_hour,
+			date_time->tm_min,
+			date_time->tm_sec,
+			(unsigned int)actual_time,
+			(unsigned int)msdos_date_time);
+
 		no = ntracks * nsectors * nsurfaces;
 		disk_size = no * 1024L;
-		disk_image = malloc((size_t)disk_size);
+		disk_image = (unsigned char*) malloc((size_t)disk_size);
 		if (!disk_image)
 		{
 			fprintf(stderr,
@@ -430,6 +465,10 @@ int main(int argc, char* argv[])
 		memset(disk_image, 0, disk_size);
 		memcpy(disk_image, (void*)boot_c, sizeof(boot_c));
 		image_boot = (void*)disk_image;
+		image_boot->time[0] = msdos_date_time;
+		image_boot->time[1] = msdos_date_time >> 8;
+		image_boot->time[2] = msdos_date_time >> 16;
+		image_boot->time[3] = msdos_date_time >> 24;
 		image_boot->tracks[0] = ntracks % 256;
 		image_boot->tracks[1] = ntracks / 256;
 		image_boot->sectors[0] = nsectors % 256;
@@ -543,14 +582,14 @@ int main(int argc, char* argv[])
 	}
 	else			/* opening existing output file */
 	{
-		disk_image = malloc((size_t)disk_size);
+		disk_image = (unsigned char*)malloc((size_t)disk_size);
 		if (fseek(foutput, 0, SEEK_SET) != 0)
 		{
 			fprintf(stderr, "Can't read output file!\n");
 			return 1;
 		}
 		fread(disk_image, 1, disk_size, foutput);
-		image_boot = (void*)disk_image;
+		image_boot = (struct s_boot*)disk_image;
 	}
 
 	len = free_bytes(disk_image + image_boot->sec_fat1[0] * 1024,
@@ -566,6 +605,7 @@ int main(int argc, char* argv[])
 		return 2;
 	}
 
+	/*
 	if (fseek(finput, 0, SEEK_END) != 0)
 	{
 		fprintf(stderr, "Input file reading error!\n");
@@ -573,6 +613,28 @@ int main(int argc, char* argv[])
 	}
 	input_len = ftell(finput);
 	rewind(finput);
+	*/
+
+	fstat(fileno(finput), &statdata);
+	input_len = statdata.st_size;
+	modified_time = statdata.st_mtime;
+	date_time = localtime(&modified_time);
+	msdos_date_time =
+		(date_time->tm_sec >> 1) |
+		(date_time->tm_min << 5) |
+		(date_time->tm_hour << 11) |
+		(date_time->tm_mday << 16) |
+		((date_time->tm_mon + 1) << 21) |
+		((date_time->tm_year + 1900 - 1980) << 25);
+	if (DBG) printf("Input file time stamp: %02u.%02u.%04u %02u:%02u:%02u  Unix:%u  Msdos:%u\n",
+		date_time->tm_mday,
+		date_time->tm_mon + 1,
+		date_time->tm_year + 1900,
+		date_time->tm_hour,
+		date_time->tm_min,
+		date_time->tm_sec,
+		(unsigned int)modified_time,
+		(unsigned int)msdos_date_time);
 
 	image_dirs = (void*)(disk_image + image_boot->dirs[0] * 1024
 		+ ndir * 4);
@@ -588,17 +650,20 @@ int main(int argc, char* argv[])
 			fprintf(stderr, "No space for new directory!\n");
 			return 2;
 		}
+		if (DBG)
+			printf("Create new directory %u in sector: 0x%03X\n", ndir, i);
 		s = disk_image + image_boot->sec_fat1[0] * 1024 + i * 2;
 		*(s++) = 0;
 		*s = 0x84;
 		len -= 1024;
 		/* vytvorit adresar (polozka v DIRe a v novom sektore) */
 		image_dir0 = (void*)(disk_image + i * 1024);
+		memset(image_dir0, 0x00, 0x0400); /* Inicializacia noveho DIR sektora ! */
 		image_dir0->ident = 0x80;
-		image_dir0->time[0] = 0;
-		image_dir0->time[1] = 0;
-		image_dir0->time[2] = 0;
-		image_dir0->time[3] = 0;
+		image_dir0->time[0] = msdos_date_time;
+		image_dir0->time[1] = msdos_date_time >> 8;
+		image_dir0->time[2] = msdos_date_time >> 16;
+		image_dir0->time[3] = msdos_date_time >> 24;
 		image_dir0->parent = 0;
 		strncpy(image_dir0->name, "bin2mbd\0\0\0", 10);
 		strncpy(image_dir0->ext_name,
@@ -621,7 +686,7 @@ int main(int argc, char* argv[])
 	dirsec = image_dirs->sector[0];
 	while (found == 0)
 	{
-		image_dir = (void*)(disk_image + dirsec * 1024);
+		image_dir = (struct s_dir*)(disk_image + dirsec * 1024);
 		for (i = 0; i < 1024 / 32; i++)
 		{
 			if ((image_dir->ident != 0x80) &&
@@ -629,19 +694,15 @@ int main(int argc, char* argv[])
 				(image_dir->ident != 0xA0) &&
 				(image_dir->ident != 0xB0))
 			{
+				if (DBG)
+					printf("Create directory entry %u in sector 0x%03X\n", i, dirsec);
 				image_dir->ident = 0xB0;
-				image_dir->time[0] = image_dir->time[1] =
-					image_dir->time[2] = image_dir->time[3] = 0;
+				image_dir->time[0] = msdos_date_time;
+				image_dir->time[1] = msdos_date_time >> 8;
+				image_dir->time[2] = msdos_date_time >> 16;
+				image_dir->time[3] = msdos_date_time >> 24;
 				image_dir->h_type = 3;	/* BYTES */
 				memcpy(image_dir->h_name, finname, 10);
-				for (no = 0; no < 10; no++)
-					if (image_dir->h_name[no] == 0 ||
-						image_dir->h_name[no] == '.')
-				{
-					while(no < 10)
-						image_dir->h_name[no++] = ' ';
-					break;
-				}
 				no = input_len % 65536;
 				image_dir->h_len[0] = no % 256;
 				image_dir->h_len[1] = (unsigned char)(no / 256);
@@ -663,6 +724,8 @@ int main(int argc, char* argv[])
 				do
 				{
 					fread(disk_image + no * 1024, 1, 1024, finput);
+					if (DBG)
+						printf("Write data into sector 0x%03X\n", no);
 					p = disk_image + image_boot->sec_fat1[0] * 1024
 						+ 2 * no;
 					if (len == input_len / 1024)
@@ -699,11 +762,15 @@ int main(int argc, char* argv[])
 					image_boot->fat_sectors[0]);
 				if (dirsec != -1)
 				{
-					no = dirsec & 0xC0;
-					*p = no % 256;
-					*(p + 1) = (unsigned char)(no / 256);
-					p = disk_image + image_boot->sec_fat1[0] * 1024
-						+ 2 * dirsec;
+					if (DBG)
+						printf("Append new DIR sector 0x%03X\n", dirsec);
+					/* Inicializacia noveho DIR sektora !! */
+					memset(disk_image + dirsec * 1024, 0x00, 0x0400);
+					/* FAT polozka stareho DIR sektora ukazuje na novy */
+					*p = dirsec;
+					*(p + 1) = (dirsec >> 8) | 0xC0;
+					/* Novy DIR sektor bude mat polozku 0x8400 */
+					p = disk_image + image_boot->sec_fat1[0] * 1024	+ 2 * dirsec;
 					*p = 0;
 					*(p + 1) = 0x84;
 				}
