@@ -1,6 +1,17 @@
-1. modify Makefile to fit your configuration (default works in most cases)
-2. make
-3. make install
+Dependencies
+============
 
-binary cleanup: make clean
-uninstall: make uninstall
+All utilities need working C or C++ compiler. The following utilities need
+another dependencies, else will be not compiled:
+
+dithvide: libx and libjpeg
+divideogen: libpng
+
+Installing
+==========
+
+1. autoreconf --install (only for SVN code)
+2. ./configure
+3. make
+4. make install
+
