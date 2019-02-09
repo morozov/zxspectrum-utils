@@ -218,7 +218,7 @@ int main (int argc, char *argv[]) {
 				fprintf(stderr, "Invalid input file name\n");
 				return 1;
 			}
-			stpncpy(finname, in_basename, 10);
+			strncpy(finname, in_basename, 10);
 		}
 		else {
 			fprintf(stderr, "Input only one bin. file!\n");
