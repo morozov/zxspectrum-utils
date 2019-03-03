@@ -25,18 +25,16 @@ dirtap_SOURCES = dirtap.c endian-compat.h
 if COMPILE_DITHVIDEO
 dithvide_SOURCES = dithvide.c
 dithvide_CFLAGS = @X_CFLAGS@
-dithvide_LDFLAGS = @X_LIBS@ -lX11 -ljpeg
+dithvide_LDADD=@X_LIBS@ -lX11
 endif
 
 if COMPILE_DIVIDEOGEN
 divideogen_SOURCES = divideogen.c
-divideogen_LDFLAGS = -lpng
 endif
 
 hobeta2trd_SOURCES = hobeta2trd.c
 hobto0_SOURCES = hobto0.c endian-compat.h
 lstbas_SOURCES = lstbas.c endian-compat.h
-lstbas_LDFLAGS = -lm
 lstrd_SOURCES = lstrd.c
 makesna_SOURCES = makesna.cpp
 mb2tap_SOURCES = mb2tap.c endian-compat.h

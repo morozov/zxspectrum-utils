@@ -2,19 +2,18 @@ AC_INIT([zxspectrum-utils], [1.0], [https://sourceforge.net/projects/zxspectrumu
 AM_INIT_AUTOMAKE([-Wall -Werror])
 AC_PROG_CC
 AC_PROG_CXX
+AM_PROG_CC_C_O
 
-LIBJPEG=""
 libjpeg_msg="no"
-AC_SUBST(LIBJPEG)
-AC_CHECK_LIB(jpeg,jpeg_start_decompress,[
-	AC_CHECK_HEADER(jpeglib.h,[
-		AC_DEFINE(HAVE_LIBJPEG,1,[define if we found LIBJPEG and its headers])
-			LIBJPEG="-ljpeg"
-			libjpeg_msg="yes"
-		])
-])
+libpng_msg="no"
+have_x="no"
 
 AC_PATH_XTRA
+AC_SEARCH_LIBS([pow],[m])
+#AC_SEARCH_LIBS([XOpenDisplay],[X11],[have_x="yes"])
+AC_SEARCH_LIBS([jpeg_start_decompress],[jpeg],[libjpeg_msg="yes"])
+AC_SEARCH_LIBS([png_create_write_struct_2],[png],[libpng_msg="yes"])
+
 HAVE_DITHVIDEO="no"
 AS_IF([test "x$libjpeg_msg" = "xyes"], [
        AS_IF([test "x$have_x" = "xyes"], [
@@ -22,17 +21,6 @@ AS_IF([test "x$libjpeg_msg" = "xyes"], [
 	])
 ])
 AM_CONDITIONAL([COMPILE_DITHVIDEO], [test "x$HAVE_DITHVIDEO" = "xyes"])
-
-LIBPNG=""
-libpng_msg="no"
-AC_SUBST(LIBPNG)
-AC_CHECK_LIB(png,png_create_write_struct_2,[
-	AC_CHECK_HEADER(png.h,[
-		AC_DEFINE(HAVE_LIBPNG,1,[define if we found LIBPNG and its headers])
-			LIBPNG="-lpng"
-			libpng_msg="yes"
-		])
-])
 AM_CONDITIONAL([COMPILE_DIVIDEOGEN], [test "x$libpng_msg" = "xyes"])
 
 AC_CHECK_FUNCS([bzero])
