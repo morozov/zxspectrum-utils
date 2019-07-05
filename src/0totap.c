@@ -95,8 +95,6 @@ int main(int argc, char *argv[])
 
   pomoc(argc, argv[0]);
 
-  umask(S_IWGRP | S_IWOTH);
-
   strcpy(meno,"outfile");
   nam=argv[1];
   tapename=0;arg0=3;c=0;files=0;
