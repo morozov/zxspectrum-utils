@@ -92,8 +92,6 @@ int main(int argc, char *argv[])
   struct stat filestat;
   int args,longnames;
 
-  umask(S_IWGRP | S_IWOTH);
-
   pomoc(argc, argv[0]);
 
   args=1;longnames=0;
