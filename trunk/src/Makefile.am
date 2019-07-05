@@ -1,6 +1,7 @@
 bin_PROGRAMS = 0tobin 0tohob 0totap bin2mbd bin2tap binto0 breplace createtrd \
 	       d802tap dir0 dirhob dirtap hobeta2trd hobto0 lstbas lstrd \
-	       makesna mb2tap mbdir mbload permutor tap2d80 tap2mbd tap2mbhdd \
+	       makesna mb2tap mbdcheck mbdir mbdidfix mbdirsec mbload mbdnew \
+	       mbrokfix permutor tap2d80 tap2mbd tap2mbhdd \
 	       tap2tzx tapto0 tsttap tzx2tap 
 if COMPILE_DITHVIDEO
 bin_PROGRAMS += dithvide
