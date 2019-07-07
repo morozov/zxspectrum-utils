@@ -1,4 +1,4 @@
-.TH BIN2TAP 1 "Date: 2013/13/07 01:00:00" "ZX Spectrum utils"
+.TH BIN2TAP 1 "Date: 7th July, 2019" "ZX Spectrum utils"
 .SH NAME
 bin2tap \- convert binary file into .tap file
 .SH SYNOPSIS
@@ -9,36 +9,102 @@ The \fBbin2tap\fP program is a member of zxspectrum-utils(1) suite of tools. Use
 .SH DESCRIPTION
 All options are optional except input file name. If some option is required and is not set, default value is used. Options are:
 
-  \-p                     make BASIC program instead of CODE block
-  \-a address             start address of CODE block,
-                         default value is 32768
-  \-x extra_address       extra address of CODE block,
-                         default value is 32768
-  \-o output_file         assign output .tap file. If this switch
-                         is not set, program try to replace extension
-                         of input file (extension is search in last 4
-                         characters) by .tap extension. If he's not
-                         successfull, join extension after name of
-                         input file.
+.SH OPTIONS
+.B \-p
+.RS
+Make BASIC program instead of CODE block
+.RE
+.PP
+.B \-a
+.I address
+.RS
+Start address of CODE block, default value is
+.I 32768
+.RE
+.PP
+.B \-x
+.I extra_address
+.RS
+Extra address of CODE block, default value is
+.I 32768
+.RE
+.PP
+.B \-o
+.I output_file
+.RS
+Assign output .tap file. If this switch is not set, program try to replace extension of input file (extension is search in last 4 characters) by .tap extension. If he's not successfull, join extension after name of input file.
+.RE
+.PP
+.B \-b
+.RS
+This switch include BASIC loader in output file
+.RE
+.PP
+.B \-c
+.I clear_address
+.RS
+Set address in CLEAR command in loader, default value is
+.I 24575
+.RE
+.PP
+.B \-r
+.I run_address
+.RS
+Set run address in loader (RANDOMIZE USR), defaul value is
+.I 32768
+.RE
+.PP
+.B \-cb
+.I value
+.RS
+Set BORDER colour to value, default value is
+.I 0
+.RE
+.PP
+.B \-cp
+.I value
+.RS
+Set PAPER colour to value, default value is
+.I 0
+.RE
+.PP
+.B \-ci
+.I value
+.RS
+Set INK colour to value, default value is
+.I 7
+.RE
+.PP
+.B \-d80
+.RS
+Create D80 loader, name of BASIC loader is set to "run"
+.RE
+.PP
+.B \-append
+.RS
+Append created tap at end of file
+.RE
+.PP
+.B \-hp
+.B --header-poke
+.RS
+Include 
+.I POKE 23739,111
+command for dissabling tape headers
+.RE
+.PP
+.B \-h
+.B --help
+.RS
+Print usage information
+.RE
+.PP
+.B \-v
+.B --version
+.RS
+Print program version
 
-  \-b                     this switch include BASIC loader in
-                         output file
-  \-c clear_address       set address in CLEAR command in loader,
-                         default value is 24575
-  \-r run_address         set run address in loader (RANDOMIZE USR),
-                         defaul value is 32768
-  \-cb value              set BORDER colour to value, default value is 0
-  \-cp value              set PAPER colour to value, default value is 0
-  \-ci value              set INK colour to value, default value is 7
-  \-d80                   create D80 loader, name of BASIC loader is
-                         set to "run"
-  \-append                append created tap at end of file
-  \-hp | --header-poke    include POKE 23739,111 command for dissabling
-                         tape headers
-
-  \-h  | --help           print usage information
-  \-v  | --version        print program version
-
+.SH BASIC LOADER
 BASIC loader for CODE blocks looks as follow:
 
   10 REM loader by bin2tap1.3
@@ -48,3 +114,5 @@ BASIC loader for CODE blocks looks as follow:
   50 LOAD  "name_of_file" CODE
   60 RANDOMIZE USR VAL "32768"
 
+.SH SEE ALSO
+.IR bin2mbd "(1)"

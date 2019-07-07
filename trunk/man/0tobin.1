@@ -1,0 +1,38 @@
+.TH 0TOBIN 1 "Date: 7th July, 2019" "ZX Spectrum utils"
+.SH NAME
+0tobin \- convert input files in 000 format into plain raw
+.SH SYNOPSIS
+.TP
+\fB0tobin\fP [\fI\-l\fP] file1 [\fIfile2...\fP]
+.SH OVERVIEW
+The \fB0tobin\fP program is a member of zxspectrum-utils(1) suite of tools. It's used to convert input files in 000 format into plain raw.
+.SH DESCRIPTION
+Utility expects one or more filenames. You can use wildcards '*' and '?' in filename parameters.
+.RE
+.PP
+Extension of output binary files will be:
+.RS
+.I bas
+for basic program
+
+.I dat
+for number or character array
+
+.I cod
+for bytes
+
+.I bin
+for headerless or unknown type
+.RE
+
+.SH OPTIONS
+.B \-l
+.RS
+Create long filenames
+.RE
+.PP
+
+.SH SEE ALSO
+.IR 0tohob "(1),"
+.IR 0totap "(1),"
+.IR binto0 "(1)
