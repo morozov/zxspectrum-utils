@@ -1,0 +1,32 @@
+.TH 0TOTAP 1 "Date: 8th July, 2019" "ZX Spectrum utils"
+.SH NAME
+0totap \- convert input files in 000 format into TAP format
+.SH SYNOPSIS
+\fB0totap\fP file1 [\fIfile2...\fP]
+
+\fB0totap\fP [\fI\-o outfile.[tap]\fP] file1 [\fIfile2...\fP]
+
+\fB0totap\fP [\fI\-a outfile.[tap]\fP] file1 [\fIfile2...\fP]
+.SH OVERVIEW
+The \fB0totap\fP program is a member of zxspectrum-utils(1) suite of tools. It's used to convert input files in 000 format into TAP file format.
+.SH DESCRIPTION
+Utility expects one or more filenames. You can use wildcards '*' and '?' in filename parameters.
+
+.SH OPTIONS
+.B \-o
+.I outfile.[tap]
+.RS
+Overwrite output file
+.RE
+.PP
+.B \-a
+.I outfile.[tap]
+.RS
+Append input file(s) into output file
+.RE
+.PP
+
+.SH SEE ALSO
+.IR 0tobin "(1),"
+.IR 0tohob "(1),"
+.IR binto0 "(1)

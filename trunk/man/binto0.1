@@ -1,0 +1,29 @@
+.TH BINTO0 1 "Date: 8th July, 2019" "ZX Spectrum utils"
+.SH NAME
+binto0 \- convert binary input file into 000 file format
+.SH SYNOPSIS
+.TP
+\fBbinto0\fP input_file TYPE [\fIADD [BAS]\fP]
+.SH OVERVIEW
+The \fBbinto0\fP program is a member of zxspectrum-utils(1) suite of tools. It's used to convert input binary files into 000 file format.
+.SH DESCRIPTION
+Utility add 000 format header for plain binary input file. Extension of output file will be three-digit number, starting at 000 and increasing if file with this name already exist. The numbers TYPE, ADD and BAS are used to create header information and the meaning is:
+
+.RS
+.I TYPE
+= type of file (0=basic, 1=number data, 2=character data, 3=bytes)
+
+.I ADD
+= start line of basic, address of bytes, variable of data
+
+.I BAS
+= length of basic withoug variables (not needed for other types)
+.RE
+.PP
+
+If you specify TYPE=4 then it makes headerless with flagbyte ADD. Parameters ADD and BAS are optional. Default value of ADD is 32768 for TYPE=basic,data,bytes and 255 for TYPE=headerless. Default value for BAS for basic is total lenght of basic (without variables) or 32768 for other types.
+
+.SH SEE ALSO
+.IR 0tohob "(1),"
+.IR 0totap "(1),"
+.IR 0tobin "(1)
