@@ -11,7 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define KONIEC {perror(meno);if(ff>0)fclose(ff);exit(1);}
+#define KONIEC {perror(meno);if(ff!=NULL)fclose(ff);exit(1);}
 #define BootHHxor 0x16
 #define BootIdent 0x40
 #define BootPasss 0x50
@@ -51,7 +51,7 @@ unsigned long getnum(char *ss)
 	return atol(ss);
 }
 
-void main(int argc, char **argv)
+int main(int argc, char **argv)
 {
 	srand(clock()); rand();
 
