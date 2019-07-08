@@ -13,7 +13,7 @@
 #include<stdlib.h>
 #include<string.h>
 
-#define KONIEC {perror(meno);if(ff>0)fclose(ff);exit(1);}
+#define KONIEC {perror(meno);if(ff!=NULL)fclose(ff);exit(1);}
 
 #define BootHHxor 0x16
 #define BootIdent 0x40
@@ -122,7 +122,7 @@ void datedisp(unsigned char * timdat)
 
 int correction(unsigned char * kdecas)
 {
-	int den, mes;
+	/* int den, mes; */
 
 	celkovo++;
 
@@ -158,7 +158,7 @@ int main(int pocet, char **parametre)
 	lenmbd = (pocet < 3) ? 0 : getnum(parametre[2]);
 	zacmbd = (pocet < 4) ? 0 : getnum(parametre[3]);
 
-	printf("File: %s  lenmbd: 0x%X %u  offset: 0x%X %u\n\n", meno, lenmbd, lenmbd, zacmbd, zacmbd);
+	printf("File: %s  lenmbd: 0x%lX %lu  offset: 0x%lX %lu\n\n", meno, lenmbd, lenmbd, zacmbd, zacmbd);
 
 	if (!lenmbd) lenmbd = 2000000000;
 
@@ -180,7 +180,7 @@ int main(int pocet, char **parametre)
 			|| (boot[0x08] != 0x02)
 			|| (boot[0x0A] != 0x01))
 		{
-			printf("%8X:", wrkmbd);
+			printf("%8lX:", wrkmbd);
 			textdisp(menodisk);
 			puts(" => Unknown format !!!");
 			continue;
@@ -190,14 +190,14 @@ int main(int pocet, char **parametre)
 		for (aa = BootIdent; aa < BootXXend; aa++) bb ^= boot[aa];
 		if (bb)
 		{
-			printf("%8X:", wrkmbd);
+			printf("%8lX:", wrkmbd);
 			textdisp(menodisk);
 			puts(" => Data integrity error !!!");
 			continue;
 		}
 
 		// Boot sektor //
-		printf("%8X:", wrkmbd);
+		printf("%8lX:", wrkmbd);
 		textdisp(menodisk);
 		datedisp(boot + 0x21);
 		rok = correction(boot + 0x21);
@@ -244,7 +244,7 @@ int main(int pocet, char **parametre)
 				for (dd = 0; dd < 1024; dd += 32)
 				{
 					subent = subs + dd;
-					printf("%8X:", wrkmbd);
+					printf("%8lX:", wrkmbd);
 					textdisp(menodisk);
 					printf("%4u:", aa);
 					textdisp(menodirs);

@@ -13,7 +13,7 @@
 #include<stdlib.h>
 #include<string.h>
 
-#define KONIEC {perror(meno);if(ff>0)fclose(ff);exit(1);}
+#define KONIEC {perror(meno);if(ff!=NULL)fclose(ff);exit(1);}
 
 #define BootHHxor 0x16
 #define BootIdent 0x40
@@ -107,7 +107,7 @@ void chain(unsigned int sector)
 	putchar('\n');
 }
 
-void main(int pocet, char **parametre)
+int main(int pocet, char **parametre)
 {
 	puts("\nBusy soft: MB-02 disk image analyser 1.04");
 
@@ -128,7 +128,7 @@ void main(int pocet, char **parametre)
 	lenmbd = (pocet < 3) ? 0l : getnum(parametre[2]);
 	zacmbd = (pocet < 4) ? 0l : getnum(parametre[3]);
 
-	printf("File: %s  length: 0x%X %u  offset: 0x%X %u\n", meno, lenmbd, lenmbd, zacmbd, zacmbd);
+	printf("File: %s  length: 0x%lX %lu  offset: 0x%lX %lu\n", meno, lenmbd, lenmbd, zacmbd, zacmbd);
 
 	if (!lenmbd) lenmbd = 2000000000l;
 
@@ -144,7 +144,7 @@ void main(int pocet, char **parametre)
 
 			printf("\n\nDisk: "); textdisp(0x0A, boot + 0x26);
 			putchar(' ');         textdisp(0x10, boot + 0x30);
-			printf("    Position in file: 0x%X %u\n", wrkmbd, wrkmbd);
+			printf("    Position in file: 0x%lX %lu\n", wrkmbd, wrkmbd);
 
 			if ((boot[0x00] != 0x18)
 				|| (boot[0x03] != 0x02)
@@ -241,8 +241,8 @@ void main(int pocet, char **parametre)
 			printf("    Virgin ......... %5u    %10u\n", virgin, virgin * 1024);
 			printf("    Deleted ........ %5u    %10u\n", deleted, deleted * 1024);
 			printf("  Used ............. %5u    %10u\n", used, used * 1024);
-			printf("    Useful ......... %5u.%02u %10u\n", useful / 1024, (useful & 0x3FF) * 100 / 1024, useful);
-			printf("    Unusable ....... %5u.%02u %10u\n", unusable / 1024, (unusable & 0x3FF) * 100 / 1024, unusable);
+			printf("    Useful ......... %5lu.%02lu %10lu\n", useful / 1024, (useful & 0x3FF) * 100 / 1024, useful);
+			printf("    Unusable ....... %5lu.%02lu %10lu\n", unusable / 1024, (unusable & 0x3FF) * 100 / 1024, unusable);
 
 			#ifdef DBG
 			putchar('\n');
@@ -254,7 +254,7 @@ void main(int pocet, char **parametre)
 			puts("\n Directories");
 			for (aa = 0; aa < 256; aa++) if ((dirs[4 * aa]) & 0x80)
 			{
-				getsec(wrkmbd, dirs[(aa << 2) + 2] | (dirs[(aa << 2) + 3] << 8) & 0x3FFF, subs);
+				getsec(wrkmbd, dirs[(aa << 2) + 2] | ((dirs[(aa << 2) + 3] << 8) & 0x3FFF), subs);
 				dat = subs[0x03] | (subs[0x04] << 8);
 				tim = subs[0x01] | (subs[0x02] << 8);
 				printf("    %3u: ", aa);
@@ -315,7 +315,7 @@ void main(int pocet, char **parametre)
 
 							textdisp(0x0A, subent + 0x06);		// Hlavicka meno
 
-							printf(":%05u:%05u:%05u  %02d.%02d.%04d %02d:%02d:%02d  ",
+							printf(":%05u:%05u:%05u  %02d.%02d.%04d %02d:%02d:%02d %c ",
 								subent[0x10] | (subent[0x11] << 8),	// Hlavicka dlzka
 								subent[0x12] | (subent[0x13] << 8),	// Hlavicka adresa
 								subent[0x14] | (subent[0x15] << 8),	// Hlavicka basic

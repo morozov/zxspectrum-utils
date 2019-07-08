@@ -30,7 +30,7 @@ BYTE efekt[] = {
 
 unsigned int GetVal(char *ss)
 {
-	unsigned int digit;
+	/* unsigned int digit; */
 	unsigned int value = 0;
 	unsigned int base = 10;
 	if (*ss == '#') { base = 16; ss++; }

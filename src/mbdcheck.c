@@ -19,7 +19,7 @@
 
 int _CRT_glob = 0;
 
-#define KONIEC {perror(meno);if(ff>0)fclose(ff);exit(1);}
+#define KONIEC {perror(meno);if(ff!=NULL)fclose(ff);exit(1);}
 #define RDFAT(sec) (fat1[sec << 1] | (fat1[(sec << 1) + 1 ] << 8))
 #define RDWORD(ptr) (*(ptr) | (*((ptr) + 1) << 8))
 
@@ -44,7 +44,7 @@ unsigned long zacmbd,lenmbd,wrkmbd,len;
 
 unsigned int GetVal(char *ss)
 {
-	unsigned int digit;
+	/* unsigned int digit; */
 	unsigned int value = 0;
 	unsigned int base = 10;
 	if (*ss == '#') { base = 16; ss++; }
@@ -191,7 +191,7 @@ int main(int pocet, char **parametre)
 	lenmbd = (pocet < 3) ? 0l : GetVal(parametre[2]);
 	zacmbd = (pocet < 4) ? 0l : GetVal(parametre[3]);
 
-	printf("File: %s  length: 0x%X %u  offset: 0x%X %u\n\n", meno, lenmbd, lenmbd, zacmbd, zacmbd);
+	printf("File: %s  length: 0x%lX %lu  offset: 0x%lX %lu\n\n", meno, lenmbd, lenmbd, zacmbd, zacmbd);
 
 	if (!lenmbd) lenmbd = 2000000000;
 
@@ -214,7 +214,7 @@ int main(int pocet, char **parametre)
 
 		getsec(wrkmbd, 0, boot);
 
-		printf("Tested image: ", wrkmbd);
+		printf("Tested image: %ld", wrkmbd);
 		textdisp(0x0A, boot + 0x26); putchar(' ');
 		textdisp(0x10, boot + 0x30); putchar('\n');
 
