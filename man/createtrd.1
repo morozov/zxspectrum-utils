@@ -1,0 +1,55 @@
+.TH CREATETRD 1 "Date: 12th July, 2019" "ZX Spectrum utils"
+.SH NAME
+createtrd \- create empty TRDOS image file
+.SH SYNOPSIS
+.TP
+\fBcreatetrd\fP [\fIOPTIONS\fP] \fIFILENAME\fP
+.SH OVERVIEW
+The \fBcreatetrd\fP program is a member of zxspectrum-utils(1) suite of tools. Use it to create empty TRDOS image file.
+.SH DESCRIPTION
+All options are optional except of output file name. You can define disk format and disk name. Options are:
+
+.SH OPTIONS
+.B \-f
+.I format
+.br
+.B \-\-format
+.I format
+.RS
+disk format (40SS, 40DS, 80SS, 80DS)
+.RE
+.PP
+.B \-n
+.I name
+.br
+.B \-\-diskname
+.I name
+.RS
+disk name, maximal lenght is 10 characters (default is empty name)
+.RE
+.PP
+.B \-h
+.br
+.B \-\- help
+.RS
+Print help text
+.RE
+.PP
+.B \-v
+.br
+.B \-\-version
+.RS
+Print version
+.RE
+.PP
+
+.SH EXAMPLE
+.RS
+create \-n \fIMUJPOKUS\fP \-f \fI80DS\fP \fImujpokus.trd\fP
+.RE
+.PP
+
+.SH SEE ALSO
+.IR lstrd "(1),"
+.IR hobeta2trd "(1),"
+.IR mbdnew "(1)"
