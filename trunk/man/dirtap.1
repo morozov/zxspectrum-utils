@@ -1,0 +1,27 @@
+.TH DIRTAP 1 "Date: 12th July, 2019" "ZX Spectrum utils"
+.SH NAME
+dirtap \- print content of TAP input file(s)
+.SH SYNOPSIS
+.TP
+\fBdirtap\fP [\fIoptions\fP] \fIfile1\fP [\fIfile2 ...\fP]
+.SH OVERVIEW
+The \fBdirtap\fP program is a member of zxspectrum-utils(1) suite of tools. Utility print content of TAP input files.
+.SH DESCRIPTION
+Utility expect one or more file names and print header informations. If you specify \fI-p\fP parameter, utility will check and print parity. You can use wildcards '*' and '?' in filename parameters.
+
+.SH OPTIONS
+.B -p
+.RS
+Additional parity tester
+.RE
+.PP
+.B -h
+.RS
+Only headers will be displayed
+.RE
+.PP
+
+.SH SEE ALSO
+.IR 0totap "(1),"
+.IR 0tobin "(1),"
+.IR bin2tap "(1)"

@@ -1,0 +1,36 @@
+.TH BREPLACE 1 "Date: 12th July, 2019" "ZX Spectrum utils"
+.SH NAME
+breplace \- binary replace
+.SH SYNOPSIS
+.TP
+\fBbreplace\fP [\fI-sOrig_file\fP][\fI-v\fP][\fI-h\fP][\fI-L\fP] \fIposition\fP \fIpatch_file\fP \fIpatched_file\fP
+.SH OVERVIEW
+The \fBbreplace\fP program is a member of zxspectrum-utils(1) suite of tools. The utility replace binary data inside of the file with binary patch on given address.
+.SH DESCRIPTION
+Utility except \fIposition\fP where to replace binary data in \fIpatched_file\fP with content of \fIpatch_file\fP. Position can be in the hexadecimal (0x12) or decimal (18) base.
+
+.SH OPTIONS
+.B \-s
+.I Orig_file
+.RS
+Store original content of replaced bytes to the Orig_file
+.RE
+.PP
+.B \-v
+.RS
+More output (be verbose)
+.RE
+.PP
+.B \-h
+.RS
+Print help text
+.RE
+.PP
+.B \-L
+.RS
+Display software license, then exit
+.RE
+.PP
+
+.SH SEE ALSO
+.IR patch "(1)"
