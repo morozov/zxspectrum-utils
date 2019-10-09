@@ -153,7 +153,7 @@ int main(int argc, char *argv[])
   a = strcmp(nam,"-a") && strcmp(nam,"-A"); /* Ak -a tak potom a=0 */
   if (!a)
     {
-    fdo=fopen(meno,"wb+");
+    fdo=fopen(meno,"ab+");
     if (fdo!=NULL)
       fseek(fdo,0,SEEK_END);
     else
