@@ -20,13 +20,15 @@
 *------------------------------------------------------------------------------*
 * Building:                                                                    *
 *     g++ -o tap2mbd tap2mbd.cpp                                               *
+*------------------------------------------------------------------------------*
+* 16.10.2019 - Corrected bugs: Not matching head+body, zero length of body     *
 *******************************************************************************/
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
 
-#define VERSION "1.3 stable"    // Version identifier. (Change after changes!)
+#define VERSION "1.3.1"    // Version identifier. (Change after changes!)
 
 #define FALSE 0
 #define TRUE !FALSE
@@ -243,28 +245,42 @@ BYTE tap2mdb (void)
 #endif
           oldflag=header.blockinfo.flag;       // remember flag
        }else{
-          printf("DATABLOCK: length=%d bytes, flag=0x%x\n",header.blockinfo.blocklength-2,header.blockinfo.flag);
+		   if (itemrec.bodylength != header.blockinfo.blocklength - 2 && !oldflag) {
+			   // If head does not match the following body
+			   // write them into separate directory file item.
+			   itemrec.ident = 0x90;         // Only header without body
+			   itemrec.bodyaddr = 0;
+			   itemrec.bodylength = 0;
+			   if (createitem(&itemrec) == 0) {                  // Not place for record
+				   printf("Root full!!!\n");                    // so disk is full
+				   return(0);
+			   }
+			   oldflag = 1;
+		   }
+		   printf("DATABLOCK: length=%d bytes, flag=0x%x\n",header.blockinfo.blocklength-2,header.blockinfo.flag);
           if(oldflag != 0){
             memset(&itemrec,0,sizeof(ITEMREC));
             itemrec.ident=0xA0;         // file just with body
             itemrec.tapheader[0]=0x04;  // !!! CONTINUE (Bulgar constant ;) !!!
             memcpy(&itemrec.tapheader[1],noname,10);
             itemrec.bodyaddr=0x4001;    // Doesn't matter (Bulgar constant ;)
-            itemrec.bodylength=(DWORD)header.blockinfo.blocklength-2; // data length
           }
+		  itemrec.bodylength = (DWORD)header.blockinfo.blocklength - 2; // data length
           oldflag=header.blockinfo.flag;           // remember flag
           itemrec.bodyflag=header.blockinfo.flag;
-          itemrec.firstsec=notusedsecfromFAT(0,FALSE);   // get available sector from FAT
+		  if (itemrec.bodylength) {
+			  itemrec.firstsec = notusedsecfromFAT(0, FALSE);   // get available sector from FAT
 #ifdef DEBUG
-          printitemrec(&itemrec);
+			  printitemrec(&itemrec);
 #endif
-          if(itemrec.firstsec == 0){                     // not place in DATA FAT
-            itemrec.firstsec=notusedsecfromFAT(0,TRUE);  // then try to look intu DIRs array
-            if(itemrec.firstsec == 0){                   // if not place again
-              printf("FAT full!!!\n");                   // so it's really full ;)
-              return(0);
-            }
-          }
+			  if (itemrec.firstsec == 0) {                     // not place in DATA FAT
+				  itemrec.firstsec = notusedsecfromFAT(0, TRUE);  // then try to look intu DIRs array
+				  if (itemrec.firstsec == 0) {                   // if not place again
+					  printf("FAT full!!!\n");                   // so it's really full ;)
+					  return(0);
+				  }
+			  }
+		  }
           if(createitem(&itemrec)== 0){                  // Not place for record
             printf("Root full!!!\n");                    // so disk is full
             return(0);
