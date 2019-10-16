@@ -22,7 +22,7 @@
 *     Transform data from ZX Spectrum TAP file to new or existing MB-02 image  *
 *     file.                                                                    *
 *------------------------------------------------------------------------------*
-* Version: 1.2 stable                                                          *
+* Version: 1.3 stable                                                          *
 *------------------------------------------------------------------------------*
 * Developer:                                                                   *
 *     Ing. Marek Zima, Slovak Republic, marek_zima@yahoo.com or zimam@host.sk  *
@@ -36,7 +36,9 @@
 *     GNU C with libC (Dev-C++ 4.0)                                            *
 *------------------------------------------------------------------------------*
 * Building:                                                                    *
-*     g++ -o tap2mbd tap2mbd.cpp                                               *
+*     g++ -o tap2mbhdd tap2mbhdd.cpp                                               *
+*------------------------------------------------------------------------------*
+* 16.10.2019 - Corrected bugs: Not matching head+body, zero length of body     *
 *******************************************************************************/
 #include <stdio.h>
 #include <stdlib.h>
@@ -44,7 +46,7 @@
 #include <time.h>
 
 #define MY_VERSION "0.0 beta"    // Version identifier (tap2mbd2). (Change after changes!)
-#define VERSION "1.2 stable"       // Version identifier (tap2mbd). (Change after changes!)
+#define VERSION "1.3 stable"       // Version identifier (tap2mbd). (Change after changes!)
 
 #define FALSE 0
 #define TRUE !FALSE
@@ -275,28 +277,42 @@ BYTE tap2mdb (void)
 #endif
           oldflag=header.blockinfo.flag;       // remember flag
        }else{
-          printf("DATABLOCK: length=%d bytes, flag=0x%x\n",header.blockinfo.blocklength-2,header.blockinfo.flag);
+		   if (itemrec.bodylength != header.blockinfo.blocklength - 2 && !oldflag) {
+			   // If head does not match the following body
+			   // write them into separate directory file item.
+			   itemrec.ident = 0x90;         // Only header without body
+			   itemrec.bodyaddr = 0;
+			   itemrec.bodylength = 0;
+			   if (createitem(&itemrec) == 0) {                  // Not place for record
+				   printf("Root full!!!\n");                    // so disk is full
+				   return(0);
+			   }
+			   oldflag = 1;
+		   }
+		   printf("DATABLOCK: length=%d bytes, flag=0x%x\n",header.blockinfo.blocklength-2,header.blockinfo.flag);
           if(oldflag != 0){
             memset(&itemrec,0,sizeof(ITEMREC));
             itemrec.ident=0xA0;         // file just with body
             itemrec.tapheader[0]=0x04;  // !!! CONTINUE (Bulgar constant ;) !!!
             memcpy(&itemrec.tapheader[1],noname,10);
             itemrec.bodyaddr=0x4001;    // Doesn't matter (Bulgar constant ;)
-            itemrec.bodylength=(DWORD)header.blockinfo.blocklength-2; // data length
           }
+		  itemrec.bodylength = (DWORD)header.blockinfo.blocklength - 2; // data length
           oldflag=header.blockinfo.flag;           // remember flag
           itemrec.bodyflag=header.blockinfo.flag;
-          itemrec.firstsec=notusedsecfromFAT(0,FALSE);   // get available sector from FAT
+		  if (itemrec.bodylength) {
+			  itemrec.firstsec = notusedsecfromFAT(0, FALSE);   // get available sector from FAT
 #ifdef DEBUG
           printitemrec(&itemrec);
 #endif
-          if(itemrec.firstsec == 0){                     // not place in DATA FAT
-            itemrec.firstsec=notusedsecfromFAT(0,TRUE);  // then try to look intu DIRs array
-            if(itemrec.firstsec == 0){                   // if not place again
-              printf("FAT full!!!\n");                   // so it's really full ;)
-              return(0);
-            }
-          }
+			  if (itemrec.firstsec == 0) {                     // not place in DATA FAT
+				  itemrec.firstsec = notusedsecfromFAT(0, TRUE);  // then try to look intu DIRs array
+				  if (itemrec.firstsec == 0) {                   // if not place again
+					  printf("FAT full!!!\n");                   // so it's really full ;)
+					  return(0);
+				  }
+			  }
+		  }
           if(createitem(&itemrec)== 0){                  // Not place for record
             printf("Root full!!!\n");                    // so disk is full
             return(0);
@@ -482,6 +498,7 @@ void createdir (BYTE *name)       // Create DIR in disk image
  memcpy(diskimg+(bootsektor.secdirs*SEKTORLENGTH)+(numofdir*sizeof(DIRSREC)),&rootrec,sizeof(DIRSREC));  // write
  updateFAT(rootrec.firstsec&0x3FFF,0x8400); // Not available, last, 0x400 bytes
  rootitem.ident = 0x80;    // 0 record in directory is his name
+ memset(diskimg + ((rootrec.firstsec & 0x3FFF)*SEKTORLENGTH), 0x00, 0x0400);  // Intialize new directory sector
  memcpy(&rootitem.tapheader[1],name,10);   // copy name to record
  memcpy(diskimg+((rootrec.firstsec&0x3FFF)*SEKTORLENGTH),&rootitem,sizeof(ITEMREC));  // write record to image
 }
@@ -544,7 +561,7 @@ BYTE copydata (ITEMREC *itemrec)    // transfer data from TAP block to disk imag
 {
  unsigned offset;
  long length;
- WORD used,notused;
+ WORD used,notused=0;
  length=itemrec->bodylength;        // length of data to be trasfered
  used=itemrec->firstsec;            // get 1st sector for data
  offset=used*SEKTORLENGTH;          // offset to this sector in disk image
