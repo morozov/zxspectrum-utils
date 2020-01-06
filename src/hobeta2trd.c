@@ -128,7 +128,7 @@ int convert (char* source_filename, char* target_filename)
 				/* source */
 				printf ("Hobeta file: %s\n", source_filename);
 				for (i = 0; i < 8; i++) printf ("%c",header.byte[HH_FILENAME+i]);
-				printf (".%c %u, %u, ",header.byte[HH_EXTENSION], header.byte[HH_ADDRESS]+header.byte[HH_ADDRESS+1]*256, header.byte[HH_LENGTH]+header.byte[HH_LENGTH+1]*256);
+				printf (".%c %u, %u, ",header.byte[HH_EXTENSION], header.byte[HH_ADDRESS]+header.byte[HH_ADDRESS+1]*256, header.byte[HH_LENGTH]+header.byte[HH_LENGTH+1]*256);
 				printf ("%u (CRC %u)\n", header.byte[HH_SECTORS], header.byte[HH_CRC]+header.byte[HH_CRC+1]*256);
 				/* target */
 				printf ("TRDOS image: %s\n", target_filename);
