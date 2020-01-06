@@ -39,7 +39,7 @@ void printalignednumber (int number, int width, char *filler)
 	n = 1;
 	for (i = 0; i < width; i++)
 	{
-		if ((number < n) && !((i == 0) && (number == 0))) printf (filler);
+		if ((number < n) && !((i == 0) && (number == 0))) printf ("%s", filler);
 		n *= 10;
 	}
 	printf ("%i",number);
