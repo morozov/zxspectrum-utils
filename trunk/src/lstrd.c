@@ -32,31 +32,19 @@
 
 #define VERSION			"1.0"
 
-void printalignednumber (int number, int width, char *filler)
-{
-	int i,n;
-
-	n = 1;
-	for (i = 0; i < width; i++)
-	{
-		if ((number < n) && !((i == 0) && (number == 0))) printf ("%s", filler);
-		n *= 10;
-	}
-	printf ("%i",number);
-}
-
 int lstrdos (char *filename, int listmode)
 {
 	unsigned char directory [9*SEC_SIZE];
 	int inputfile;
+	const char *trdosfiletype;
 	char *trdosfilename;
 	char *trdosdiskname;
 	char *trdospassword;
+	int len1, len2;
 	int freesectors;
 	int i;
 /*	char *diskformat; //not used yet */
 	int trdosfile;
-	int lichy;
 	
 	inputfile=open (filename,0);
 	if (!inputfile)
@@ -71,21 +59,15 @@ int lstrdos (char *filename, int listmode)
 	{	
 		/* soubor otevøen a naèten v pamìti, teï by nemìlo být mo¾né, aby nastala chyba */
 		trdosdiskname=(char*)malloc (11);
-		for (i=0; i<10; i++)
-		{
-		        trdosdiskname[i]=directory[INFO_SEC*SEC_SIZE + OFFSET_DISKNAME+i];
-		}
-		trdosdiskname[10]=0;
+		strncpy(trdosdiskname, directory + INFO_SEC*SEC_SIZE + OFFSET_DISKNAME, 10);
+		trdosdiskname[10]='\0';
 
-		trdospassword=(char*)malloc (9);
-		for (i=0; i<7; i++)
-		{
-		        trdospassword[i]=directory[INFO_SEC*SEC_SIZE + OFFSET_PASSWORD+i];
-		}
-		trdospassword[9]=0;
+		trdospassword=(char*)malloc (10);
+		strncpy(trdospassword, directory + INFO_SEC*SEC_SIZE + OFFSET_PASSWORD, 9);
+		trdospassword[9]='\0';
 		
 		freesectors=directory[INFO_SEC*SEC_SIZE + OFFSET_FREESECTORS]+256*directory[INFO_SEC*SEC_SIZE + OFFSET_FREESECTORS+1];
-		trdosfilename=(char*)malloc (8);
+		trdosfilename=(char*)malloc (9);
 			
 		/* Výpis */
 		switch (listmode)
@@ -98,11 +80,8 @@ int lstrdos (char *filename, int listmode)
 				for (trdosfile=0; trdosfile<directory[INFO_SEC*SEC_SIZE + OFFSET_FILES]; trdosfile++)
 				{
 					/* jméno souboru */
-					for (i=0; i<8; i++)
-					{
-						trdosfilename[i]=directory[i+16*trdosfile];
-					}
-					trdosfilename[8]=0;
+					strncpy(trdosfilename, directory+16*trdosfile, 8);
+					trdosfilename[8]='\0';
 					printf ("%s.%c\n",trdosfilename,directory[trdosfile*16+8]);
 				}
 				break;
@@ -112,24 +91,18 @@ int lstrdos (char *filename, int listmode)
 				printf ("%i File(s)\n",directory[INFO_SEC*SEC_SIZE + OFFSET_FILES]);
 				printf ("%i Deleted File(s)\n\n",directory[INFO_SEC*SEC_SIZE + OFFSET_DELETEDFILES]);
 
-				lichy=0;
-
 				for (trdosfile=0; trdosfile<directory[INFO_SEC*SEC_SIZE + OFFSET_FILES]; trdosfile++)
 				{
 					/* jméno souboru */
-					for (i=0; i<8; i++)
-					{
-						trdosfilename[i]=directory[i+16*trdosfile];
-					}
-					trdosfilename[8]=0;
-					printf ("%s <%c> ",trdosfilename,directory[trdosfile*16+8]);
-					/* délka v sektorech */
-					printalignednumber (directory[trdosfile*16+13], 3, " ");
+					strncpy(trdosfilename, directory+16*trdosfile, 8);
+					trdosfilename[8]='\0';
+					printf ("%s <%c> %3d",trdosfilename,directory[trdosfile*16+8], /* délka v sektorech */ directory[trdosfile*16+13]);
 					
-					if (lichy==1) { printf ("\n"); lichy=0; } else { printf ("  "); lichy=1;}
+					if ((trdosfile%2)==1) printf ("\n");
+					else printf ("  ");
 				}
 
-				if (lichy==1) printf ("\n");
+				if ((trdosfile%2)==1) printf ("\n");
 				printf ("\n%i Free\n",directory[INFO_SEC*SEC_SIZE + OFFSET_FREESECTORS]+256*directory[INFO_SEC*SEC_SIZE + OFFSET_FREESECTORS+1]);
 				break;
 			case 0:
@@ -163,73 +136,66 @@ int lstrdos (char *filename, int listmode)
 				printf ("--------------------------------------------------------------\n");
 				for (trdosfile=0; trdosfile<directory[INFO_SEC*SEC_SIZE + OFFSET_FILES]; trdosfile++)
 				{
-					/* jméno souboru */
-					for (i=0; i<8; i++)
-					{
-						trdosfilename[i]=directory[i+16*trdosfile];
-					}
-					trdosfilename[8]=0;
-					printf ("%s <%c>  ",trdosfilename,directory[trdosfile*16+8]);
-					/* typ souboru */
+					strncpy(trdosfilename, directory+16*trdosfile, 8);
+					trdosfilename[8]='\0';
 					switch (directory[trdosfile*16+8])
 					{
 						case 'b':
 						case 'B':
-							printf ("BASIC PROGRAM");
+							trdosfiletype = "BASIC PROGRAM";
 							break;
 						case 'c':
 						case 'C':
-							printf ("CODE (BYTES) ");
+							trdosfiletype = "CODE (BYTES)";
 							break;
 						case 'd':
 						case 'D':
-							printf ("DATA         ");
+							trdosfiletype = "DATA";
 							break;
 						case 'F':
-							printf ("VPL ANIMATION");
+							trdosfiletype = "VPL ANIMATION";
 							break;
 						case 'G':
-							printf ("CYGNUS PLUGIN");
+							trdosfiletype = "CYGNUS PLUGIN";
 							break;
 						case 'M':
-							printf ("SOUNDTRACKER ");
+							trdosfiletype = "SOUNDTRACKER";
 							break;
 						case '#':
-							printf ("STREAM       ");
+							trdosfiletype = "STREAM";
 							break;
 						default:
-							printf ("UNKNOWN      ");
+							trdosfiletype = "UNKNOWN";
 							break;
 					}
-					/* délka v sektorech */
-					printalignednumber (directory[trdosfile*16+13], 5, " ");
-					printf ("  ");
 					switch (directory[trdosfile*16+8])
 					{
 						case 'b':
 						case 'B':
-							/* délka basicu */
-							printalignednumber (directory[trdosfile*16+11]+256*directory[trdosfile*16+12], 6, " ");
-							/* délka basicu bez promìnných */
-							printalignednumber (directory[trdosfile*16+9]+256*directory[trdosfile*16+10], 7, " ");
+							len1 = /* délka basicu */ directory[trdosfile*16+11]+256*directory[trdosfile*16+12];
+							len2 = /* délka basicu bez promìnných */ directory[trdosfile*16+9]+256*directory[trdosfile*16+10];
 							break;
 						default:
-							/* adresa kam se soubor nahraje do RAM, není-li explicitnì urèeno jinak */
-							printalignednumber (directory[trdosfile*16+9]+256*directory[trdosfile*16+10], 6, " ");
-							/* délka v bytech */
-							printalignednumber (directory[trdosfile*16+11]+256*directory[trdosfile*16+12], 7, " ");
-							break;
+							len1 = /* adresa kam se soubor nahraje do RAM, není-li explicitnì urèeno jinak */
+								directory[trdosfile*16+9]+256*directory[trdosfile*16+10];
+							len2 = /* délka v bytech */ directory[trdosfile*16+11]+256*directory[trdosfile*16+12];
 					}
-					printf ("   ");
-					/* první stopa zabraná souborem */
-					printalignednumber (directory[trdosfile*16+15], 3, " ");
-					printf ("    ");
-					/* první sektor zabraný souborem */
-					printalignednumber (directory[trdosfile*16+14], 3, " ");
-					printf ("\n");
+					printf ("%s <%c>  %-13s%5i  %6i%7i   %3i    %3i\n"
+							, trdosfilename			/* jméno souboru */
+							, directory[trdosfile*16+8]	/* typ souboru */
+							, trdosfiletype			/* typ souboru */
+							, directory[trdosfile*16+13]	/* délka v sektorech */
+							, len1				/* délka basicu / adresa */
+							, len2				/* délka basicu bez promìnných / délka v bytech */
+							, directory[trdosfile*16+15]	/* první stopa zabraná souborem */
+							, directory[trdosfile*16+14]	/* první sektor zabraný souborem */
+						);
 				}
 				break;
 		}
+		free(trdosdiskname);
+		free(trdospassword);
+		free(trdosfilename);
 	}
 	else
 	{
