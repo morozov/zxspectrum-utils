@@ -1,16 +1,16 @@
- /*******************************************************************************
+/*******************************************************************************
 *                                TAP2D80                                       *
 ********************************************************************************
 * Description:                                                                 *
 *     Transform data from ZX Spectrum TAP file to new or existing MDOS image   *
 *     file.                                                                    *
 *------------------------------------------------------------------------------*
-* Version: 1.2 stable                                                          *
+* Version: 1.3 stable                                                          *
 *------------------------------------------------------------------------------*
 * Developer:                                                                   *
 *     Ing. Marek Zima, Slovak Republic, marek_zima@yahoo.com or zimam@host.sk  *
 * Bugfixer:                                                                    *
-*     Lubomir Blaha (tritol@trilogic.cz) @2005, Poke @2011, UB880D @2011                   *
+*     Lubomir Blaha (tritol@trilogic.cz) @2005, Poke @2011, UB880D @2011       *
 *------------------------------------------------------------------------------*
 * License:                                                                     *
 *     GNU License                                                              *
@@ -25,16 +25,22 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <errno.h>
 
-#define VERSION "1.2 stable" // Version identifier. (Change after changes!)
+#define VERSION "1.3 stable" // Version identifier. (Change after changes!)
 
 #define FALSE 0
 #define TRUE !FALSE
 
-#define BYTE unsigned char
-#define WORD unsigned short int
+#define BYTE  unsigned char
+#define WORD  unsigned short int
+#define DWORD unsigned int
 
-#define DISKLENGTH 737280L
+#define DISKLENGTH_S 737280L
+#define DISKLENGTH_L 866304L
 #define SEKTORLENGTH 512
 #define FATADDR 512     //0x200 - 1st sector
 #define DIRSECTORADDR 0xC00
@@ -73,6 +79,13 @@ typedef struct {                          // MDOS boot sector
                 BYTE identificaton[4];    // Identification of disk
                } BOOTSEC;
 
+typedef struct {                          // MDOS3 infosector
+                BYTE identificaton[4];    // Identification of disk
+                BYTE nameofdisk[32];      // Name od disk
+                BYTE writeprotect;        // 
+                BYTE empty[475];          // zeros ;)
+               } INFOSEC;
+
 typedef struct {                          // ITEM record
                 BYTE extention;           // Extention (P,B,N,C,S,Q)
                 BYTE filename[10];        // Filename
@@ -88,13 +101,15 @@ typedef struct {                          // ITEM record
 
 
 // boot sector for new image file
-BOOTSEC bootsektor =   {
-                        { 0x81,0x18,0x50,0x09,0x00,0x18,0x50,0x09,   // BIG MESS
+BOOTSEC bootsektor_small =   {
+                        {
+                        0x81,0x18,0x50,0x09,0x00,0x18,0x50,0x09,   // BIG MESS
                         0x00,0x00,0x00,0x00,0x01,0x14,0x50,0x28,
                         0x00,0x14,0x28,0x09,0x00,0x00,0x00,0x00,
                         0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
                         0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
-                        0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00 },
+                        0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
+                        },
                         0x81,
                         0x18,                    // 2 sides, 40 tracks drive
                         0x50,                    // 0x50 tracks per side
@@ -109,12 +124,76 @@ BOOTSEC bootsektor =   {
                         { 'S','D','O','S' }  // disk identification
                        };
 
+// boot sector for new image file
+BOOTSEC bootsektor_large =   {
+                        {
+                        0x01,0x18,0x5e,0x09,0x00,0x18,0x5e,0x09,   // BIG MESS
+                        0x00,0x00,0x00,0x00,0x01,0x14,0x50,0x09,
+                        0x00,0x14,0x50,0x09,0x00,0x00,0x00,0x00,
+                        0x01,0x18,0x28,0x09,0x00,0x18,0x50,0x09,
+                        0x00,0x00,0x00,0x00,0x01,0x14,0x50,0x09,
+                        0x00,0x14,0x50,0x09,0x00,0x00,0x00,0x00
+                        },
+                        0x01,
+                        0x18,                    // 2 sides, 40 tracks drive
+                        0x5e,                    // 0x5e tracks per side
+                        0x09,                    // 0x09 sectors per track
+                        0x00,                    // always 0
+                        0x18,                    // copy of type of disk
+                        0x5e,                    // copy of tracks per side
+                        0x09,                    // copy of sectors per track
+                        { 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00 },  // empty
+                        { 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00 }, // name of disk
+                        { 0x00,0x00 },   // random numbers - filled by program
+                        { 'S','D','O','S' }  // disk identification
+                       };
 
+BOOTSEC bootsektor;
+
+/*
+Description of the infosector
+
+OFFSET (decimal)       content description
+
+0-3                    DOS mark (text: SDOS)
+4-35                   32 characters for disc description
+36                     write-protect ("0"=R/W, "1"= read only)
+37-511                 free
+*/
+
+INFOSEC infosektor = {
+//0
+  { 'S', 'D', 'O', 'S' },
+//4
+  { 'I', 'm', 'p', 'o', 'r', 't', 'e', 'd', ' ', 'b', 'y', ' ', 't', 'a', 'p', '2', 'd', '8', '0', '.', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ' },
+//36
+  '0',
+  {
+//37
+  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+//64
+  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+//128
+  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+//256
+  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+//384
+  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+//512
+  }
+};
 // ------------------ Global variable definitions ------
 FILE *in,*out;                       // file descriptors for input/output files
 BYTE *diskimg;                       // pointer to memory, where we read image
 long fileoffset;                     // offset inside input file
 BYTE numofheaderless;                // number of headerless blocks
+
+BYTE largereq=FALSE;        // request for large file
+BYTE infosecreq=FALSE;      // request for infosector
+DWORD imagesize=0;
 
 // ------------------ Functions declarations ------
 BYTE tap2d80 (void);
@@ -130,45 +209,135 @@ BYTE createitem(ITEMREC *);
 BYTE copydata(ITEMREC *);
 BYTE writeD80 (char *);
 void freediskimg (void);
-void preparediskname(char*);
+void preparediskname(char*, char*);
 BYTE extention(BYTE);
 void spacetozero(BYTE *);
-BYTE pause(char *);
+
+void usage() {
+   printf("Syntax: tap2d80 [-p] [-l] [-i] <tapfile.tap> <d80file.d80>\n");
+   printf("    or: tap2d80 [-p] [-a] <tapfile.tap> <d80file.d80>\n");
+   printf("        -p: PAUSE after completion\n");
+   printf("        -l: Large disk (MDOS3 866304 bytes)\n");
+   printf("        -i: Include infosector (MDOS3 512bytes header)\n");
+   printf("        -a: Automatic detection for '-l' and '-i' parameters\n");
+ }
+
 
 int main(int argc,char *argv[])
 {
- int retval = 0;        // Suppose, everything will be OK
- BYTE pausereq = FALSE; // PAUSE request
+ int retval = 0;          // Suppose, everything will be OK
+ int i;
+ struct stat st;
+ char *input=NULL, *output=NULL;
+ 
+ BYTE pausereq = FALSE;   // PAUSE request
+ BYTE autodetect = FALSE; // autodetect type from size
+ largereq = FALSE;        // request for large file
+ infosecreq = FALSE;      // request for infosector
+ 
  printf(">>> TAP2D80 %s - @2002 by Marek Zima <<<\n",VERSION);
  printf("Fixed by Tritol @2005, Poke @2011, UB880D @2011\n\n");
- if( ((argc<3) || (argc>4)) || ((argc==4) && ((pausereq=pause(argv[3]))==FALSE)) ){
-   printf("Syntax: tap2d80 <tapfile.tap> <d80file.d80> [p/P]\n");
-   printf("        [p/P] - PAUSE\n");
-   return(1);
+ 
+ for (i=1;i<argc;i++) {
+   if (argv[i][0]=='-') {
+     switch (argv[i][1]) {
+       case 'l':
+       case 'L':
+         largereq=TRUE;
+         break;
+       case 'p':
+       case 'P':
+         pausereq=TRUE;
+         break;
+       case 'i':
+       case 'I':
+         infosecreq=TRUE;
+         break;
+       case 'a':
+       case 'A':
+         autodetect=TRUE;
+         break;
+       default:
+         usage();
+         return 1;
+     }
+   } else {
+     if (output!=NULL) {
+       usage();
+       return 1;
+     }
+     if (input!=NULL) output=argv[i];
+     else input=argv[i];
+   }
  }
- in = fopen(argv[1],"rb");                // open input file
+ 
+ if ((autodetect==TRUE && (largereq==TRUE || infosecreq==TRUE)) || output==NULL) {
+   usage();
+   return 1;
+ }
+ 
+ if (autodetect==TRUE) {
+   if ((stat(output, &st))<0) {
+     printf("stat: %s\n", strerror(errno));
+     return 1;
+   }
+   switch(st.st_size) {
+     case DISKLENGTH_S:
+       largereq=FALSE;
+       infosecreq=FALSE;
+       break;
+     case DISKLENGTH_S+sizeof(infosektor):
+       largereq=FALSE;
+       infosecreq=TRUE;
+       break;
+     case DISKLENGTH_L:
+       largereq=TRUE;
+       infosecreq=FALSE;
+       break;
+     case DISKLENGTH_L+sizeof(infosektor):
+       largereq=TRUE;
+       infosecreq=TRUE;
+       break;
+     default:
+       printf("Unsupported filesize.\n");
+       return 1;
+   }
+ }
+ 
+ if (largereq==FALSE) imagesize=DISKLENGTH_S;
+ else imagesize=DISKLENGTH_L;
+ 
+ in = fopen(input,"rb");                  // open input file
  if (in !=NULL)                           // if successfull
  {
-  if((out=fopen(argv[2],"rb")) == NULL){  // if output file doesn't exist
-    preparediskname(argv[2]);             // Prepare name for disk
+  if((out=fopen(output,"rb")) == NULL){   // if output file doesn't exist
+    preparediskname(input, output);       // Prepare name for disk
     preparediskimg();                     // create empty MDOS disk image
   }else{                                  // if output file exists (do APPEND)
+    if ((stat(output, &st))<0) {
+      printf("stat: %s\n", strerror(errno));
+      return 1;
+    }
+    if ((infosecreq==FALSE && st.st_size!=(int)imagesize) || (infosecreq==TRUE && st.st_size!=(int)(imagesize+sizeof(infosektor)))) {
+      printf("Bad filesize.\n");
+      return 1;
+    }
     readdiskimg();                        // read image file to memory
     fclose(out);                          // close output file
   }
   numofheaderless=0;                      // No headerless block yet
   switch (checkimage()){                  // Check If it's SDOS disk image
    case 0:
-    if(tap2d80() && writeD80(argv[2])){   // transfer data from TAP to image in memory
+    if(tap2d80() && writeD80(output)){    // transfer data from TAP to image in memory
       printf("Finished successfull.\n");  // if successful write memory to image file
     }                                     // if everything is OK, display information
     break;
    case 1:                                // It's not SDOS disk image
-    printf("'%s' is not D80 disk image!\n",argv[2]);
+    printf("'%s' is not D80 disk image!\n",output);
     retval=3;
     break;
    default:                               // SDOS image has not supported format
-    printf("Existing D80 image in '%s' is not supported!\n",argv[2]);
+    printf("Existing D80 image in '%s' is not supported!\n",output);
     retval=4;
   }
   freediskimg();                          // free allocated memory
@@ -176,7 +345,7 @@ int main(int argc,char *argv[])
  }
  else                                     // if input file was not opened
  {
-  printf("Can't open input file '%s'!\n",argv[1]);
+  printf("Can't open input file '%s'!\n",input);
   retval=2;
  }
  printf("\n");                            // Make one empty line
@@ -219,20 +388,20 @@ BYTE tap2d80 (void)
           printf("DATABLOCK: length=%d bytes, flag=0x%x\n",header.blockinfo.blocklength-2,header.blockinfo.flag);
           if(oldflag != 0){
             memset(&itemrec,0,sizeof(ITEMREC));               // prepare item to dir
-            itemrec.extention='H';  // extention for HEADERLESS block
-            itemrec.zero=header.blockinfo.flag; // Flag byte
+            itemrec.extention = 'H';  // extention for HEADERLESS block
+            itemrec.zero = header.blockinfo.flag; // Flag byte
             sprintf(defaultname,"%s%c",DEFAULTNAME,'A'+(numofheaderless++));
             memcpy(&itemrec.filename[0],defaultname,10); // copy header
 
-	    i=header.blockinfo.blocklength-2; // data length
+            i = header.blockinfo.blocklength-2; // data length
             itemrec.length[0] = i % 256;
-	    itemrec.length[1] = i / 256;
+            itemrec.length[1] = i / 256;
           }
-          oldflag=header.blockinfo.flag;           // remember flag
-	  i=notusedsecfromFAT(0);   // get available sector from FAT
+          oldflag = header.blockinfo.flag;           // remember flag
+          i = notusedsecfromFAT(0);   // get available sector from FAT
           itemrec.firstsec[0] = i % 256;
-	  itemrec.firstsec[1] = i / 256;
-          itemrec.attributes=0x0F;
+          itemrec.firstsec[1] = i / 256;
+          itemrec.attributes = 0x0F;
           memset(&itemrec.filledwithE5[0],0xE5,10);
 #ifdef DEBUG
           printitemrec(&itemrec);
@@ -256,11 +425,16 @@ BYTE tap2d80 (void)
 // ------------------- Disk image functions -----------
 void preparediskimg (void)
 {
- diskimg = (BYTE *)malloc(DISKLENGTH); // Get memory
-    memset(diskimg,0,DIRSECTORADDR);   // set by 0 (clear) (boot,fat)
-    memset(diskimg+DIRSECTORADDR,0xE5,DISKLENGTH-DIRSECTORADDR); // set by 0xE5 (dir, data)
-    makesystemident();                 // Disk ident
+ if (largereq==FALSE)
+   memcpy(&bootsektor, &bootsektor_small,sizeof(BOOTSEC));
+ else
+   memcpy(&bootsektor, &bootsektor_large,sizeof(BOOTSEC));
+ 
+ diskimg = (BYTE *)malloc(imagesize);  // Get memory
  if(diskimg != NULL){                  // create empty disk image
+    memset(diskimg,0,DIRSECTORADDR);   // set by 0 (clear) (boot,fat)
+    memset(diskimg+DIRSECTORADDR,0xE5,imagesize-DIRSECTORADDR); // set by 0xE5 (dir, data)
+    makesystemident();                 // Disk ident
     memcpy(diskimg+BOOTSECTORDATA,&bootsektor,sizeof(BOOTSEC));   // copy boot sector
     initFAT();                                     // init FAT
  }else{
@@ -272,10 +446,24 @@ void preparediskimg (void)
 
 void readdiskimg (void)
 {
- diskimg = (BYTE *)malloc(DISKLENGTH); // Get memory
-    memset(diskimg,0,DISKLENGTH);      // set by 0 (clear)
+ diskimg = (BYTE *)malloc(imagesize);  // Get memory
+ memset(diskimg,0,imagesize);          // set by 0 (clear)
  if(diskimg != NULL){
-    fread(diskimg,1,DISKLENGTH,out);   // read image file to memory
+    if (infosecreq) {
+      if((fread(&infosektor,1,sizeof(infosektor),out))!=sizeof(infosektor)) {
+        printf("Image too small\n");
+        fclose(in);
+        freediskimg();
+        exit(2);
+      }
+    }
+    
+    if ((fread(diskimg,1,imagesize,out))!=imagesize) {  // read image file to memory
+      printf("Image too small\n");
+      fclose(in);
+      freediskimg();
+      exit(2);
+    }
     memcpy(&bootsektor,diskimg+BOOTSECTORDATA,sizeof(BOOTSEC)); // read boot sector
  }else{
     printf("Can't alloc memory for disk image!\n");
@@ -287,6 +475,7 @@ void readdiskimg (void)
 void makesystemident(void)    // Generate system identification for disk image.
 {                             // Generate 32 random numbers
  int i;
+ 
  srand(time(0));
  for (i=0;i<2;i++){
   bootsektor.random[i]=rand()%256;
@@ -296,15 +485,15 @@ void makesystemident(void)    // Generate system identification for disk image.
 BYTE checkimage (void)        // Check disk image for MDOS disk
 {
  BYTE retval;
- if(strncmp((char*)bootsektor.identificaton,"SDOS",4) == 0){
+ if ((strncmp((char*)bootsektor.identificaton,"SDOS",4) == 0) && (infosecreq==FALSE || (strncmp((char*)infosektor.identificaton,"SDOS",4) == 0))) {
    retval = 0;
  } else {
    retval = 1;
  }
  if (retval == 0){            // If image is correct SDOS (MDOS)
-                              // check it for 2 sides, 80 track per side,
+                              // check it for 2 sides, 80/94 track per side,
                               // 9 sectors per track
-   if((bootsektor.disktype & 0x10) && (bootsektor.numoftrack == 0x50)
+   if((bootsektor.disktype & 0x10) && ((bootsektor.numoftrack == 0x50) || (bootsektor.numoftrack == 0x5e))
        && (bootsektor.numofsec == 0x09)){
      retval = 0;
    } else{
@@ -319,6 +508,7 @@ void initFAT (void)        // Create FAT for empty disk image
 {
  WORD i;
  BYTE *offset;
+ 
  for (i=0;i<(DIRSECTORADDR - FATADDR)/SEKTORLENGTH;i++){
    offset=diskimg+FATADDR+((i+1)*SEKTORLENGTH)-1;  // Get offset to FAT sektor end
    *offset = (*offset & 0xF0) | 0x0D;              // crank FAT
@@ -326,7 +516,7 @@ void initFAT (void)        // Create FAT for empty disk image
  for (i=0;i<14;i++){       // Set 14 sectors to reserved (BOOT,FAT,DIR)
    updateFAT(i,0x0DDD);
  }
- for (i=DISKLENGTH/SEKTORLENGTH;i<((DIRSECTORADDR - FATADDR)*2/3)-1; i++){ // sectors above DISKLENGHT
+ for (i=imagesize/SEKTORLENGTH;i<((DIRSECTORADDR - FATADDR)*2/3)-1; i++){ // sectors above DISKLENGHT
    updateFAT(i,0x0DDD);                                          // set to unused
  }
 }
@@ -336,6 +526,7 @@ void updateFAT (WORD sektor,WORD value)   // Write value to FAT according sektor
 // BYTE hibyte;
  BYTE *offset;
  WORD secinfatsector;
+ 
  secinfatsector=sektor%341;
  offset=diskimg+FATADDR+(sektor/341*SEKTORLENGTH)+(secinfatsector*3/2);  // Get offset
  if (secinfatsector%2 == 0){              // Even sector
@@ -351,6 +542,7 @@ WORD getFATnum (WORD sector)        // Get value from FAT according sector
 {
   WORD retval,secinfatsector;
   WORD *offset;
+  
   secinfatsector=sector%341;
   offset=(WORD *)(diskimg+FATADDR+(sector/341*SEKTORLENGTH)+(secinfatsector*3/2));  // Get offset
   if (secinfatsector%2 == 0){              // Even sector
@@ -365,7 +557,8 @@ WORD getFATnum (WORD sector)        // Get value from FAT according sector
 WORD notusedsecfromFAT (WORD used)   // Get available sector from FAT
 {
  WORD sektor=1, maxsektor;
- maxsektor = DISKLENGTH/SEKTORLENGTH;
+ 
+ maxsektor = imagesize/SEKTORLENGTH;
  while (((getFATnum(sektor) != 0) || (sektor == used))
        && (sektor < maxsektor))  sektor++;
  if (sektor >= maxsektor){
@@ -409,12 +602,12 @@ BYTE copydata (ITEMREC *itemrec)    // transfer data from TAP block to disk imag
  unsigned offset,counter=0;
  WORD length,totallength;
  WORD used,notused;
- length=itemrec->length[0]+256*itemrec->length[1];
-				    // length of data to be trasfered
+ length = itemrec->length[0] + 256 * itemrec->length[1];
+                                    // length of data to be trasfered
  totallength=length;                // remember total langth
- used=itemrec->firstsec[0]+256*itemrec->firstsec[1];
- 				    // get 1st sector for data
- offset=used*SEKTORLENGTH;          // offset to this sector in disk image
+ used = itemrec->firstsec[0] + 256 * itemrec->firstsec[1];
+                                    // get 1st sector for data
+ offset = used * SEKTORLENGTH;      // offset to this sector in disk image
  if(length == 0){                   // if empty bloch
    updateFAT(used,0xC00);           // update FAT, (empty block)
  }
@@ -429,10 +622,10 @@ BYTE copydata (ITEMREC *itemrec)    // transfer data from TAP block to disk imag
     used=notused;                            // if next copy to new sector, set new sector as used
     length-=SEKTORLENGTH;                    // decrement data length
   }else{                            // data could be stored in one sector
-    fread(diskimg+offset,1,length,in);      // Copy data.
+    fread(diskimg+offset,1,length,in);       // Copy data.
     updateFAT(used,(totallength%SEKTORLENGTH)+0xE00);  // update FAT, (end of file)
     memset(diskimg+offset+length,0,SEKTORLENGTH-length); // set by 0 (clear)
-    length=0;                               // set lenght to 0
+    length=0;                                // set lenght to 0
   }
   counter++;
  }
@@ -440,18 +633,34 @@ BYTE copydata (ITEMREC *itemrec)    // transfer data from TAP block to disk imag
 }
 
 // ------------------- Tools -----------
-void preparediskname (char *in)         // Set dirname according name of input file
-{                                      // by cutting extention
-  int count=0;
-  while ((*in != '\0') && (*in != '.') && (count < 10)){   // check also for length (10)
-   bootsektor.nameofdisk[count++] = *(in++);
+void preparediskname (char *in, char *out)   // Set diskname according name of input file
+{                                            // by cutting extention
+  int count = 0;
+  char *ptr = out;
+  const char *infotxt="Imported TAP ";
+  
+  while ((*ptr != '\0') && (*ptr != '.') && (count < 10)){   // check also for length (10)
+   bootsektor.nameofdisk[count++] = *(ptr++);
   }
+  
+  count = 0;
+  ptr = (char *)infotxt;
+  while ((*ptr != '\0') && (count < 32)){
+   infosektor.nameofdisk[count++] = *(ptr++);
+  }
+  
+  ptr = in;
+  while ((*ptr != '\0') && (count < 32)){
+   infosektor.nameofdisk[count++] = *(ptr++);
+  }
+  
 }
 
 void freediskimg (void)  // free memory occuped by image
 {
  if (diskimg != NULL){
     free(diskimg);
+    diskimg = NULL;
  }
 }
 
@@ -460,7 +669,9 @@ BYTE writeD80 (char *outfile)    // write disk image from memory to file
  BYTE retval=1;
  out=fopen(outfile,"wb");        // Try to create file
  if (out != NULL){               // file created
-    fwrite(diskimg,1,DISKLENGTH,out);      // write data to file
+    if (infosecreq == TRUE)
+      fwrite(&infosektor, 1, sizeof(infosektor), out);
+    fwrite(diskimg,1,imagesize,out);      // write data to file
     fclose(out);
  }else{                          // if file wasn't create
     printf("Can't create D80 image file '%s'!\n",outfile);
@@ -490,15 +701,6 @@ void spacetozero (BYTE *filename)   // Change spaces in string to 0
  while (*str == ' '){
    *str = 0;       // change SPACE to "\0"
    str--;
- }
-}
-
-BYTE pause (char *param)      // Pause requested?
-{
- if ((strcmp(param,"P") == 0) || (strcmp(param,"p") == 0)){
-   return(TRUE);
- } else {
-   return(FALSE);
  }
 }
 
