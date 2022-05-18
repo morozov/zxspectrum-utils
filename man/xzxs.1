@@ -47,3 +47,31 @@ Switch between decimal and hexadecimal output.
 Turn attribute grid on/off.
 .RE
 .PP
+
+.SH Info line
+At the bottom of the window you can find the info line. It shows information related to position under the mouse cursor. Format of the line looks as follows:
+
+  POS:[pixel coordinates] [attributes coordinates] ADDR: addressPix addresPixBlock addressAttr
+
+Meaning of the values:
+
+.B pixel coordinates
+Coordinates of the pixels (bitmap) from the left top corner.
+.RE
+.PP
+.B attributes coordinates
+Coordinates of the attributes from the left top corner.
+.RE
+.PP
+.B addressPix
+Address of the pixel position in video RAM.
+.RE
+.PP
+.B addressPixBlock
+Address of pixels of the 8x8 block in video RAM.
+.RE
+.PP
+.B addressAttr
+Address of attributes in video RAM.
+.RE
+.PP

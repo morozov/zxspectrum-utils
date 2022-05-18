@@ -81,7 +81,7 @@ void updateInfo(int x, int y) {
 	XSetForeground(display, gc, 0L);
 	sprintf(info, hex ? hexadecimal : decimal,
 		x, y, x/8, y/8,
-		16384 + getPixOffset(x, y), 16384 + getPixOffset(x, y&(~7)), 22528 + getAttrOffset(x, y));
+		16384 + getPixOffset(x, y), 16384 + getPixOffset(x, y&(~7)), 16384 + getAttrOffset(x, y));
 	XDrawString(display, win, gc, 0, scale*192+12, info, strlen(info));
 }
 
@@ -203,7 +203,6 @@ int main (int argc, char **argv) {
 			updateInfo(mouse_x, mouse_y);
 		}
 		if (event.type == KeyPress) {
-			printf("keypress = %d\n", event.xkey.keycode);
 			if (event.xkey.keycode == 9 || event.xkey.keycode == 24) /* ESC + Q */
 				loop = 0;
 			if (event.xkey.keycode == 43) { /* H */
