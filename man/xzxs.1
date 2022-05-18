@@ -1,0 +1,49 @@
+.TH XZXS 1 "Date: 18th May, 2022" "ZX Spectrum utils"
+.SH NAME
+xzxs \- show and pick up coordinates from ZX Spectrum screen
+.SH SYNOPSIS
+.TP
+\fBxzxs\fP [\fIoptions\fP] \fIinput_file\fP
+.SH OVERVIEW
+The \fBxzxs\fP program is a member of zxspectrum-utils(1) suite of tools. It is an interactive utility for displaying a ZX Spectrum screen and picking up coordinates and/or screen address.
+.SH DESCRIPTION
+All options are optional except input file name. Options are:
+
+.SH OPTIONS
+.B \-scale
+.I value
+.RS
+Set how much should be the screen scale up. Default is
+.I 2
+.RE
+.PP
+.B \-hex
+.I 0/1
+.RS
+Show values in hexadecimal. Default is
+.I 0
+.RE
+.PP
+.B \-grid
+.I 0/1
+.RS
+Show attributes grid. Default is
+.I 1
+.RE
+.PP
+
+.SH Function keys
+You can use these keys while displaying the screen:
+
+.B Q/ESC
+Quit the program
+.RE
+.PP
+.B H
+Switch between decimal and hexadecimal output.
+.RE
+.PP
+.B G
+Turn attribute grid on/off.
+.RE
+.PP

@@ -9,6 +9,9 @@ endif
 if COMPILE_DIVIDEOGEN
 bin_PROGRAMS += divideogen
 endif
+if COMPILE_XZXS
+bin_PROGRAMS += xzxs
+endif
 
 0tobin_SOURCES = 0tobin.c endian-compat.h
 0tohob_SOURCES = 0tohob.c endian-compat.h
@@ -31,6 +34,11 @@ endif
 
 if COMPILE_DIVIDEOGEN
 divideogen_SOURCES = divideogen.c
+endif
+
+if COMPILE_XZXS
+xzxs_SOURCES = xzxs.c
+xzxs_LDADD=@X_LIBS@ -lX11
 endif
 
 hobeta2trd_SOURCES = hobeta2trd.c
