@@ -22,6 +22,7 @@ AS_IF([test "x$libjpeg_msg" = "xyes"], [
 ])
 AM_CONDITIONAL([COMPILE_DITHVIDEO], [test "x$HAVE_DITHVIDEO" = "xyes"])
 AM_CONDITIONAL([COMPILE_DIVIDEOGEN], [test "x$libpng_msg" = "xyes"])
+AM_CONDITIONAL([COMPILE_XZXS], [test "x$have_x" = "xyes"])
 
 AC_CHECK_FUNCS([bzero])
 AC_CHECK_FUNCS([memset])
