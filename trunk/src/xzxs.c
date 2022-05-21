@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
+#include <X11/XKBlib.h>
 
 Display *display;
 GC gc;
@@ -38,14 +39,14 @@ int getAttrOffset(int x, int y) {
 	return 6144 + 32*row + column;
 }
 
-long getColour(unsigned char *data, int x, int y, int pix) {
+long getColour(unsigned char *data, int x, int y, int pix, unsigned short highlight) {
 	int offset;
 	unsigned char attr, bright;
 
 	offset = getAttrOffset(x, y);
 	attr = data[offset];
 	bright = attr & 64 ? 0xFF : 0xD8;
-	if ((x & (~7)) == (mouse_x & (~7)) && (y & (~7)) == (mouse_y & (~7)))
+	if (highlight && (x & (~7)) == (mouse_x & (~7)) && (y & (~7)) == (mouse_y & (~7)))
 		bright /= 2;
 	attr &= 63;
 	if (!pix)
@@ -63,11 +64,25 @@ void drawSpeccyScreen(XImage *img, unsigned char *data, short unsigned int scale
 	for (y = 0; y < 192; y++)
 		for (x = 0; x < 256; x++) {
 			offset = getPixOffset(x, y);
-			colour = getColour(data, x, y, (data[offset] >> (7 - x % 8)) & 1);
+			colour = getColour(data, x, y, (data[offset] >> (7 - x % 8)) & 1, 1);
 			for (ys = 0; ys < scale; ys++)
 				for (xs = 0; xs < scale; xs++)
 					XPutPixel(img, x*scale + xs, y*scale + ys, colour);
 
+		}
+}
+
+void drawAttribute(XImage *img, unsigned char *data, int posx, int posy, unsigned short hightlight) {
+	int x, y, xs, ys, offset;
+	long colour;
+
+	for (y = 0; y < 8; y++)
+		for (x = 0; x < 8; x++) {
+			offset = getPixOffset(posx*8 + x, posy*8 + y);
+			colour = getColour(data, posx*8 + x, posy*8 + y, (data[offset] >> (7 - x % 8)) & 1, hightlight);
+			for (ys = 0; ys < scale; ys++)
+				for (xs = 0; xs < scale; xs++)
+					XPutPixel(img, (posx*8 + x)*scale + xs, (posy*8 + y)*scale + ys, colour);
 		}
 }
 
@@ -90,19 +105,13 @@ void drawGrid(XImage *img, short unsigned int scale) {
 	long gray = 0xD8D8D8L;
 	int x,y;
 
-	for (x = 0; x < scale*256; x++) {
-		XPutPixel(img, x, 64*scale, yellow);
-		XPutPixel(img, x, 128*scale, yellow);
-	}
-
 	for (x = 0; x < 32; x++)
 		for (y = 0; y < scale*192; y++)
 			XPutPixel(img, scale*x*8, y, gray);
 
 	for (y = 0; y < 24; y++)
 		for (x = 0; x < scale*256; x++)
-			XPutPixel(img, x, scale*y*8, gray);
-
+			XPutPixel(img, x, scale*y*8, (y == 8 || y == 16) ? yellow : gray);
 }
 
 int main (int argc, char **argv) { 
@@ -115,6 +124,10 @@ int main (int argc, char **argv) {
 	XImage *img;
 	XEvent event;
 	short unsigned int loop = 1;
+	XCrossingEvent *xc;
+	XMotionEvent *xm;
+	KeySym ks;
+	char *key;
 
 	for (int i = 1; i < argc; i++) {
 		if (strcmp(argv[i], "-scale") == 0) {
@@ -182,44 +195,70 @@ int main (int argc, char **argv) {
 	win = XCreateSimpleWindow(display, root, 0, 0, scale*256, scale*192+16, 1, 0, 0);
 	XSelectInput(display, win, ExposureMask);
 	XMapWindow(display, win);
-	XSelectInput(display, win, ExposureMask | PointerMotionMask | KeyPressMask);
+	XSelectInput(display, win, ExposureMask | PointerMotionMask | KeyPressMask | EnterWindowMask );
 
 	while(loop) {
 		XNextEvent(display, &event);
-		if (event.type == Expose) {
-			gc = DefaultGC(display, screen_num);
-			XPutImage(display, win, gc, img, 0, 0, 0, 0, scale*256, scale*192);
-			updateInfo(mouse_x, mouse_y);
-		}
-		if (event.type == MotionNotify) {
-			XMotionEvent *xm = (XMotionEvent*)&event;
-			mouse_x = xm->x/scale;
-			mouse_y = xm->y/scale;
+		switch (event.type) {
+			case EnterNotify:
+				xc = (XCrossingEvent*)&event;
+				drawAttribute(img, data, mouse_x/8, mouse_y/8, 0);
+				if ((xc->x >= 0) && (xc->x < 256*scale) && (xc->y >= 0) && (xc->y < 192*scale)) {
+					/* do not update coords if we are off screen */
+					mouse_x = xc->x/scale;
+					mouse_y = xc->y/scale;
+				}
 
-			drawSpeccyScreen(img, data, scale);
-			if (scale > 1 && grid)
-				drawGrid(img, scale);
-			XPutImage(display, win, gc, img, 0, 0, 0, 0, scale*256, scale*192);
-			updateInfo(mouse_x, mouse_y);
-		}
-		if (event.type == KeyPress) {
-			if (event.xkey.keycode == 9 || event.xkey.keycode == 24) /* ESC + Q */
-				loop = 0;
-			if (event.xkey.keycode == 43) { /* H */
-				hex ^= 1;
-				updateInfo(mouse_x, mouse_y);
-			}
-			if (event.xkey.keycode == 42) { /* G */
-				grid ^= 1;
-				drawSpeccyScreen(img, data, scale);
+				drawAttribute(img, data, mouse_x/8, mouse_y/8, 1);
 				if (scale > 1 && grid)
 					drawGrid(img, scale);
 				XPutImage(display, win, gc, img, 0, 0, 0, 0, scale*256, scale*192);
-			}
+				updateInfo(mouse_x, mouse_y);
+				break;
+				
+			case Expose:
+				gc = DefaultGC(display, screen_num);
+				XPutImage(display, win, gc, img, 0, 0, 0, 0, scale*256, scale*192);
+				updateInfo(mouse_x, mouse_y);
+				break;
+				
+			case MotionNotify:
+				xm = (XMotionEvent*)&event;
+				drawAttribute(img, data, mouse_x/8, mouse_y/8, 0);
+				if ((xm->x >= 0) && (xm->x < 256*scale) && (xm->y >= 0) && (xm->y < 192*scale)) {
+					/* do not update coords if we are off screen */
+					mouse_x = xm->x/scale;
+					mouse_y = xm->y/scale;
+				}
+
+				drawAttribute(img, data, mouse_x/8, mouse_y/8, 1);
+				if (scale > 1 && grid)
+					drawGrid(img, scale);
+				XPutImage(display, win, gc, img, 0, 0, 0, 0, scale*256, scale*192);
+				updateInfo(mouse_x, mouse_y);
+				break;
+				
+			case KeyPress:
+				ks = XkbKeycodeToKeysym(display, event.xkey.keycode, 0, 0);
+				key = XKeysymToString(ks);
+				if (!strcmp(key, "Escape" )|| !strcmp(key, "q")) /* ESC + Q */
+					loop = 0;
+				if (!strcmp(key, "h")) { /* H */
+					hex ^= 1;
+					updateInfo(mouse_x, mouse_y);
+				}
+				if (!strcmp(key, "g")) { /* G */
+					grid ^= 1;
+					drawSpeccyScreen(img, data, scale);
+					if (scale > 1 && grid)
+						drawGrid(img, scale);
+					XPutImage(display, win, gc, img, 0, 0, 0, 0, scale*256, scale*192);
+				}
+				break;
+			default:;
 		}
 	}
 
-	//sleep(10);
 	XCloseDisplay(display);
 
 	free(data);
