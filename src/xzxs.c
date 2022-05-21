@@ -41,19 +41,24 @@ int getAttrOffset(int x, int y) {
 
 long getColour(unsigned char *data, int x, int y, int pix, unsigned short highlight) {
 	int offset;
-	unsigned char attr, bright;
+	unsigned char attr, bright, black;
 
 	offset = getAttrOffset(x, y);
 	attr = data[offset];
 	bright = attr & 64 ? 0xFF : 0xD8;
-	if (highlight && (x & (~7)) == (mouse_x & (~7)) && (y & (~7)) == (mouse_y & (~7)))
+	black = 0;
+	if (highlight && (x & (~7)) == (mouse_x & (~7)) && (y & (~7)) == (mouse_y & (~7))) {
 		bright /= 2;
+		black = 63;
+	}
 	attr &= 63;
 	if (!pix)
 		attr = attr >> 3;
 
-	return (attr & 2 ? ((long)bright << 16) : 0L) + (attr & 4 ? ((long)bright << 8) : 0L) +
-		(attr & 1 ? (long)bright : 0L);
+	if ((attr&7)!=0) black=0;
+
+	return (attr & 2 ? ((long)bright << 16) : ((long)black << 16)) + (attr & 4 ? ((long)bright << 8) : ((long)black << 8)) +
+		(attr & 1 ? (long)bright : (long)black);
 }
 
 void drawSpeccyScreen(XImage *img, unsigned char *data, short unsigned int scale) {
