@@ -13,6 +13,8 @@ Window win, root;
 int mouse_x = 0, mouse_y = 0;
 short unsigned int scale = 2;
 short unsigned int hex = 0, grid = 1;
+long yellow = 0xC0C000L;
+long gray = 0xD8D8D8L;
 
 void usage(char * prog) {
 	printf("Usage:\n\
@@ -89,6 +91,12 @@ void drawAttribute(XImage *img, unsigned char *data, int posx, int posy, unsigne
 				for (xs = 0; xs < scale; xs++)
 					XPutPixel(img, (posx*8 + x)*scale + xs, (posy*8 + y)*scale + ys, colour);
 		}
+	if (grid) {
+		for (x = 0; x < 8*scale; x++)
+			XPutPixel(img, posx*8*scale+x, posy*8*scale, (posy == 8 || posy == 16) ? yellow : gray);
+		for (y = 0; y < 8*scale; y++)
+			XPutPixel(img, posx*8*scale, posy*8*scale+y, gray);
+	}
 }
 
 void updateInfo(int x, int y) {
@@ -106,8 +114,6 @@ void updateInfo(int x, int y) {
 }
 
 void drawGrid(XImage *img, short unsigned int scale) {
-	long yellow = 0xC0C000L;
-	long gray = 0xD8D8D8L;
 	int x,y;
 
 	for (x = 0; x < 32; x++)
@@ -215,8 +221,6 @@ int main (int argc, char **argv) {
 				}
 
 				drawAttribute(img, data, mouse_x/8, mouse_y/8, 1);
-				if (scale > 1 && grid)
-					drawGrid(img, scale);
 				XPutImage(display, win, gc, img, 0, 0, 0, 0, scale*256, scale*192);
 				updateInfo(mouse_x, mouse_y);
 				break;
@@ -237,8 +241,7 @@ int main (int argc, char **argv) {
 				}
 
 				drawAttribute(img, data, mouse_x/8, mouse_y/8, 1);
-				if (scale > 1 && grid)
-					drawGrid(img, scale);
+
 				XPutImage(display, win, gc, img, 0, 0, 0, 0, scale*256, scale*192);
 				updateInfo(mouse_x, mouse_y);
 				break;
