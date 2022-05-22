@@ -38,6 +38,7 @@ endif
 
 if COMPILE_XZXS
 xzxs_SOURCES = xzxs.c
+zxzs_CFLAGS = @X_CFLAGS@
 xzxs_LDADD=@X_LIBS@ -lX11
 endif
 
