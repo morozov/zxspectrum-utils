@@ -2,7 +2,7 @@ bin_PROGRAMS = 0tobin 0tohob 0totap bin2mbd bin2tap binto0 breplace createtrd \
 	       d802tap dir0 dirhob dirtap hobeta2trd hobto0 lstbas lstrd \
 	       makesna mb2tap mbdcheck mbdir mbdidfix mbdirsec mbload mbdnew \
 	       mbrokfix permutor tap2d80 tap2mbd tap2mbhdd \
-	       tap2tzx tapto0 tsttap tzx2tap 
+	       tap2tzx tapto0 tm9tap tsttap tzx2tap 
 if COMPILE_DITHVIDEO
 bin_PROGRAMS += dithvide
 endif
@@ -56,5 +56,6 @@ tap2mbd_SOURCES = tap2mbd.cpp
 tap2mbhdd_SOURCES = tap2mbhdd.cpp
 tap2tzx_SOURCES = tap2tzx.c
 tapto0_SOURCES = tapto0.c endian-compat.h
+tm9tap_SOURCES = tm9tap.c
 tsttap_SOURCES = tsttap.c endian-compat.h
 tzx2tap_SOURCES = tzx2tap.c
