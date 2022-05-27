@@ -6,6 +6,7 @@ another dependencies, else will be not compiled:
 
 dithvide: libx and libjpeg
 divideogen: libpng
+xzxs: libx
 
 Installing
 ==========

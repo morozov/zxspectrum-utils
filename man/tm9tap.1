@@ -1,0 +1,23 @@
+.TH TM9TAP 1 "Date: 27th May, 2022" "ZX Spectrum utils"
+.SH NAME
+tm9tap \- convert Busysoft's Tape Manager 09 data into TAP format
+.SH SYNOPSIS
+\fBtm9tap\fP \fIinput_tm9_file\fP \fIoutput_tap_file\fP
+.SH OVERVIEW
+The \fBtm9tap\fP program is a member of zxspectrum-utils(1) suite of tools. It's used to convert Busysoft's Tape Manager 09 data into TAP file format.
+.SH DESCRIPTION
+How to convert data from Tape Manager 09 into TAP file
+
+.I 1.
+Extract pure binary data files from Tm9
+   Example:  Sil5 t0.bin, Sil5 t1.bin, Sil5 t2.bin, Sil5 t3.bin, Sil5 t4.bin
+
+.I 2.
+Stick together these binary files into one binary image
+   Example:  copy /B Sil5*.* AllSil5.bin
+   Note: Order of files is important !
+
+.I 3.
+Use this convertor: Tm9 <input binary image> <output tap file>
+   Example:  Tm9tap AllSil5.bin Sil5demo.tap
+
