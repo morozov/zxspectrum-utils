@@ -1,3 +1,19 @@
+2022-11-11 Busy 
+MbdNew 1.01
+~~~~~~~~~~~
+- Release 09.11.2022
+- Added creating bootable system disk (with -s)
+- Added creating image up to 2048 kB (2036 kB free)
+- Corrected computing FAT checksum
+- Corrected displaying free space
+- Corrected parsing name of disk
+Notes
+~~~~~
+- Requirements for system disk: 11 sec/trk and capacity 154+ kB
+- Drive config: drives 1,2: 3.5 HD DiskChange, drives 3,4: not used
+- Max. 2047 kB logical disk in 2048 kB image (e.g. 128x8 geometry)
+
+
 2019-02-09 mike/zeroteam <mike@zeroteam.sk>
 
 * autoconf setup

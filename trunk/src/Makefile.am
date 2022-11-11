@@ -59,3 +59,4 @@ tapto0_SOURCES = tapto0.c endian-compat.h
 tm9tap_SOURCES = tm9tap.c
 tsttap_SOURCES = tsttap.c endian-compat.h
 tzx2tap_SOURCES = tzx2tap.c
+mbdnew_SOURCES = mbdnew.c mbdsys.h
