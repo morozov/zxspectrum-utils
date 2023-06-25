@@ -21,6 +21,7 @@
 * USA
 */
 
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -44,6 +45,7 @@ typedef struct {
 /* globální parametry */
 int	verbose = 0;
 int	force = 0;
+int	errno;
 
 /*unsigned int CheckSum;
 int i;
@@ -76,7 +78,7 @@ int convert (char* source_filename, char* target_filename)
 		exit (-1);
 	}
 	
-	outputfile = fopen (target_filename,"ra+");
+	outputfile = fopen (target_filename,"r+");
 	if (outputfile == NULL)
 	{	
 		printf ("Error: Can't open output file %s.\n",target_filename);
@@ -167,7 +169,7 @@ int convert (char* source_filename, char* target_filename)
 				/* zapią sektor (předpokládám, ľe se vejde, protoľe si to spočítám a zkontroluju předem) */
 				if (fwrite (&sector, sizeof (trdos_sector), 1, outputfile) != 1)	/* ZÁPIS */
 				{
-					printf ("Sector writing in %s failed.\n", target_filename);
+					printf ("Sector writing in %s failed: %s\n", target_filename, strerror(errno));
 					fclose (inputfile);
 					fclose (outputfile);
 					exit (-1);
